@@ -3,8 +3,7 @@
 # Description: Explores BioTIME datasets by mapping the global coverage of data sets, attributing contributors,
 # and shows trends from Science 2014 paper.
 # Author: Cher Chow
-# Updated: 8 January 2021
-
+# Updated: 11 January 2021
 
 require(shiny)
 require(shinyjs)
@@ -20,12 +19,10 @@ require(leaflet.providers)
 
 # Data set up -------------------------------------------------------------
 
-## Set up BioTIME database connection (only if on server!)
-# Connection <- dbConnect(RMariaDB::MariaDB(), dbname="biotimedb", username="btteam", password="20Biotime17", host="127.0.0.1")
+# if running outside of BioTIME server
+# SET WORKING DIRECTORY FIRST :)
 
-# if running outside of R server
-
-BT_datasets <- read.csv('https://raw.githubusercontent.com/bioTIMEHub/bioTIME-shiny/main/working_data.csv?token=APO2XZ6M35D4SP5IRDQ7DBC77RWEO', header=T)
+BT_datasets <- read.csv('working_data.csv', header=T)
 BT_datasets$DURATION <- BT_datasets$DURATION+1 # year inclusive
 BT_datasets$TAXA <- as.factor(BT_datasets$TAXA)
 BT_datasets$REALM <- as.factor(BT_datasets$REALM)
@@ -33,7 +30,7 @@ BT_datasets$BIOME_MAP <- as.factor(BT_datasets$BIOME_MAP)
 BT_datasets$CLIMATE <- as.factor(BT_datasets$CLIMATE)
 
 # get diversity indices data for trends
-a_div <- read.csv('https://raw.githubusercontent.com/bioTIMEHub/bioTIME-shiny/main/alpha_s1.csv?token=APO2XZ2PJUOY7IOVZAK43C277RWGE', header=T)
+a_div <- read.csv('alpha_s1.csv', header=T)
 # S species richness; varS variance in species richness among samples;
 # N summed abundances for all species in pooled samples;
 # varN variance among samples in summed abundances for all species;
@@ -41,7 +38,7 @@ a_div <- read.csv('https://raw.githubusercontent.com/bioTIMEHub/bioTIME-shiny/ma
 # PIE probability of interspecific encounter; DomMc McNaughton dominance; 
 # expShannon exponential of Shannon diversity (also known as the Hill Number 1D;
 # Chao, Chao1 asymptotic species richness estimator; Chao2 bias corrected Chao1.
-b_div <- read.csv('https://raw.githubusercontent.com/bioTIMEHub/bioTIME-shiny/main/beta_s2.csv?token=APO2XZYBBNP7SHCLA3B2QE277RWIA', header=T)
+b_div <- read.csv('beta_s2.csv', header=T)
 # Jaccard_B is the Jaccard similarity between the year’s pooled samples and the pooled sample of the first year in the time series (the time series baseline);
 # Horn_B similar to Jaccard_B but using Morisita-Horn distance;
 # Chao_B, as before but using Chao distance;
