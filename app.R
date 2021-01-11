@@ -21,7 +21,7 @@ require(leaflet.providers)
 
 # if running outside of BioTIME server
 # SET WORKING DIRECTORY FIRST :)
-
+setwd("~/OneDrive - University of St Andrews/BioTIME/Shiny")
 BT_datasets <- read.csv('working_data.csv', header=T)
 BT_datasets$DURATION <- BT_datasets$DURATION+1 # year inclusive
 BT_datasets$TAXA <- as.factor(BT_datasets$TAXA)
