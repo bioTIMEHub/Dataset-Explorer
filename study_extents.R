@@ -9,6 +9,7 @@ require(maps)
 require(raster)
 require(sp)
 require(sf)
+require(maptools)
 
 setwd("~/OneDrive - University of St Andrews/BioTIME/Shiny")
 
@@ -71,15 +72,15 @@ make_grid <- function(x, cell_diameter, cell_area, clip = FALSE) {
 
 # make a hexagon grid to overlay the area that covers all our studies
 # remember units are in km! 
-hex_grid <- make_grid(hulls, cell_area = 100^2, clip = FALSE)
+hex_grid <- make_grid(hulls, cell_area = 450^2, clip = FALSE)
 
 # for each hexagon cell that overlays our study points, match the attributes from that study point to that cell
 # your R will be incapacitated for a while
-study_hex <- sp::over(study_points, hex_grid, returnList = T)
+# study_hex <- sp::over(study_points, hex_grid, returnList = T)
 
 # filter out the hexagon cells that don't overlap with any points
-study_hex_filter <- study_hex %>% discard(function(x) nrow(x) == 0)
-rm(study_hex)
+# study_hex_filter <- study_hex %>% discard(function(x) nrow(x) == 0)
+# rm(study_hex)
 
 # generate a vector that tells me which hexagon grid corresponds with each study coordinate point
 study_coords_hex <- sp::over(studies_pointsonly, hex_grid, returnList=F)
@@ -91,10 +92,16 @@ study_coords <- study_coords %>% filter(!is.na(hexcell))
 mult.cell.studies <- study_coords %>% arrange(STUDY_ID) %>% filter(duplicated(STUDY_ID)) %>% distinct(STUDY_ID) %>% dplyr::select(STUDY_ID) %>% as_vector()
 sing.cell.studies <- study_coords %>% arrange(STUDY_ID) %>% filter(!duplicated(STUDY_ID)) %>% distinct(STUDY_ID) %>% dplyr::select(STUDY_ID) %>% as_vector()
 
-study_polygons <- as.list(rep('', length(mult.cell.studies)))
-# create joined polygons for each multiple-cell study and put them in a list
+hex_grid_sf <- hex_grid %>% spTransform(., CRS('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')) %>%
+  st_as_sf(.) %>% st_wrap_dateline(., options='WRAPDATELINE=YES') %>%
+  st_transform(., crs="+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=km +no_defs")
+extents <- data.frame(STUDY_ID=mult.cell.studies, geometry=rep('', length(mult.cell.studies)))
 for (i in 1:length(mult.cell.studies)) {
-  study_polygons[i] <- aggregate(hex_grid[as.character(study_coords$hexcell[which(study_coords$STUDY_ID == mult.cell.studies[i])])], dissolve=T)
+  extents$geometry[i] <- hex_grid_sf[c(study_coords$hexcell[which(study_coords$STUDY_ID == mult.cell.studies[i])]),1] %>% 
+  st_union(., by_feature=F)
 }
 
-
+extents <- left_join(extents, BT_datasets, by='STUDY_ID')
+saveRDS(extents, file='large_extent_studies3.rds')
+saveRDS(sing.cell.studies, file='single_cell_studies3.rds')
+save.image(file='study_extents3.RData')
