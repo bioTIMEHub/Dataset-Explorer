@@ -3,26 +3,47 @@
 # Description: Explores BioTIME datasets by mapping the global coverage of data sets, attributing contributors,
 # and shows trends from Science 2014 paper.
 # Author: Cher Chow
-# Updated: 11 January 2021
+# Updated: 4 Mar 2021
 
 require(shiny)
 require(shinyjs)
-require(RMariaDB)
-require(DBI)
+#require(RMariaDB)
+#require(DBI)
 require(tidyverse)
 require(plotly)
 require(maps)
 require(sp)
+require(sf)
 require(rgdal)
 require(leaflet)
 require(leaflet.providers)
+
 
 # Data set up -------------------------------------------------------------
 
 # if running outside of BioTIME server
 # SET WORKING DIRECTORY FIRST :)
 setwd("~/OneDrive - University of St Andrews/BioTIME/Shiny")
-BT_datasets <- read.csv('working_data.csv', header=T)
+# BioTIME color functions
+source('biotime_ggcolors.R')
+BT_datasets <- read.csv('working_data.csv', header=T) # table for dataset metadata
+study.extents <- readRDS('large_extent_studies3.rds')
+study.extents <- st_as_sf(study.extents) %>% st_set_crs("+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=km +no_defs") %>% 
+  st_transform(., 4326)
+# study_coords <- read.csv('study_coords.csv', header=T) # table of dataset coordinates (can be > 1)
+
+## if running for real on BioTIME server, uncomment these lines
+# Set up BioTIME database connection
+# Connection <- dbConnect(RMariaDB::MariaDB(), dbname="biotimedb", username="btteam", password="20Biotime17", host="127.0.0.1")
+# get dataset coordinates
+# studies <- dbGetQuery(Connection, "SELECT STUDY_ID, CENT_LAT, CENT_LONG, TAXA, TITLE, START_YEAR, END_YEAR, NUMBER_OF_SPECIES from datasets")
+# contributors <- dbGetQuery(Connection, "SELECT STUDY_ID, CONTACT_1, CONTACT_2 from contacts")
+# BT_datasets <- full_join(studies, contributors, by="STUDY_ID")
+# link dataset info with contributors
+# BT_datasets <- datasets %>% mutate(DURATION=END_YEAR-START_YEAR)
+# create a column for time-series duration
+# study_coords <- dbGetQuery(Connection, 'select distinct STUDY_ID, LATITUDE, LONGITUDE from allrawdata')
+
 BT_datasets$DURATION <- BT_datasets$DURATION+1 # year inclusive
 BT_datasets$TAXA <- as.factor(BT_datasets$TAXA)
 BT_datasets$REALM <- as.factor(BT_datasets$REALM)
@@ -38,6 +59,7 @@ a_div <- read.csv('alpha_s1.csv', header=T)
 # PIE probability of interspecific encounter; DomMc McNaughton dominance; 
 # expShannon exponential of Shannon diversity (also known as the Hill Number 1D;
 # Chao, Chao1 asymptotic species richness estimator; Chao2 bias corrected Chao1.
+
 b_div <- read.csv('beta_s2.csv', header=T)
 # Jaccard_B is the Jaccard similarity between the year’s pooled samples and the pooled sample of the first year in the time series (the time series baseline);
 # Horn_B similar to Jaccard_B but using Morisita-Horn distance;
@@ -48,11 +70,14 @@ a_div <- left_join(a_div, BT_datasets %>% select(ID=STUDY_ID, TAXA, REALM, CLIMA
 b_div <- left_join(b_div, BT_datasets %>% select(ID=STUDY_ID, TAXA, REALM, CLIMATE), by='ID')
 
 
+
+
 # User Interface (Frontend) ---------------------------------------------------------------
 ui <- fluidPage(
   tags$head(
     # Style import
     tags$link(rel = "stylesheet", type = "text/css", href = "style.css")
+    # all assets that have to be accessible for frontend like css or images have to be in the www folder
   ),
   useShinyjs(),
   
@@ -142,66 +167,6 @@ ui <- fluidPage(
 
 # Server -----------------------------------------------------------
 
-# BioTIME color functions
-
-## BioTIME palettes set up
-biotime_palettes <- list(
-  'realms' = c("#155f49","#66c1d1","#d9d956","#cf7941"),
-  'gradient' = c("#00483d","#127c8e","#31b9c2","#86db9c","#c0f176","#ffff67"),
-  'cool' = c("#155f49","#67b6c4"),
-  'warm' = c("#d9d956","#cf7941"))
-
-intPalette <- function (colors, ...) {
-  ramp <- colorRamp(colors, ...)
-  function(n) {
-    if (n > length(colors)) {x <- ramp(seq.int(0, 1, length.out = n))
-    if (ncol(x) == 4L) 
-      rgb(x[, 1L], x[, 2L], x[, 3L], x[, 4L], maxColorValue = 255)
-    else rgb(x[, 1L], x[, 2L], x[, 3L], maxColorValue = 255)}
-    else colors[sort(sample(x=c(1:length(colors)), size=n, replace=F))]
-  }
-}
-
-biotime_cols <- function(palette = "gradient", reverse = FALSE, ...) {
-  pal <- biotime_palettes[[palette]]
-  if (reverse) pal <- rev(pal)
-  intPalette(pal, ...) # interpolates palette colours
-}
-
-# Scale construction for ggplot use
-# *USAGE NOTE: the defaults to both color and fill scales are the realm palette and for discrete data.
-# Remember to change these arguments when plotting colors continuously. 
-
-scale_color_biotime <- function(palette = "realms", discrete = TRUE, reverse = FALSE, ...) {
-  pal <- biotime_cols(palette = palette, reverse = reverse)
-  if (discrete) {
-    ggplot2::discrete_scale("color", paste("biotime_", palette, sep=''), palette = pal, ...)
-  } else {
-    ggplot2::scale_color_gradientn(colours = pal(256), ...)
-  }
-}
-
-# UK English friendly :)
-scale_colour_biotime <- function(palette = "realms", discrete = TRUE, reverse = FALSE, ...) {
-  pal <- biotime_cols(palette = palette, reverse = reverse)
-  if (discrete) {
-    ggplot2::discrete_scale("colour", paste("biotime_", palette, sep=''), palette = pal, ...)
-  } else {
-    ggplot2::scale_color_gradientn(colours = pal(256), ...)
-  }
-}
-
-scale_fill_biotime <- function(palette = "realms", discrete = TRUE, reverse = FALSE, ...) {
-  pal <- biotime_cols(palette = palette, reverse = reverse)
-  if (discrete) {
-    ggplot2::discrete_scale("fill", paste("biotime_", palette, sep=''), palette = pal, ...)
-  } else {
-    ggplot2::scale_fill_gradientn(colours = pal(256), ...)
-  }
-}
-
-
-
 # define all the under the hood computations that have to be done to show the map
 server <- function(input, output) {
   
@@ -213,8 +178,14 @@ server <- function(input, output) {
 
 # Dataset map -------------------------------------------------------------
   
+  sing.studies <- readRDS('single_cell_studies3.rds') # load vector listing studies that are too small to plot extents
+  BT_datasets <- BT_datasets %>% filter(STUDY_ID %in% sing.studies)
   studies <- reactive({ # make a working dataframe based on the filter options from the input
     BT_datasets %>% filter(DURATION >= input$Duration[1] & DURATION <= input$Duration[2] & REALM %in% input$Realm & TAXA %in% input$Taxa & CLIMATE %in% input$Climate)
+  })
+  
+  large.studies <- reactive({
+    study.extents %>% filter(DURATION >= input$Duration[1] & DURATION <= input$Duration[2] & REALM %in% input$Realm & TAXA %in% input$Taxa & CLIMATE %in% input$Climate)
   })
   
   # create a palette for the leaflet map to use
@@ -223,29 +194,38 @@ server <- function(input, output) {
                   bins=c(0,50,100,250,500,1000,2000,5000,10000), pretty=T)
   
   # generate a reactive dataset summary statistic counter
-  output$studies <- renderText({length(studies() %>% select(STUDY_ID) %>% as_vector() %>% unique())})
+  output$studies <- renderText({studies() %>% distinct(STUDY_ID, .keep_all = T) %>%
+      bind_rows(., large.studies() %>% as_tibble() %>% distinct(STUDY_ID, .keep_all = T)) %>% distinct(STUDY_ID) %>% nrow()})
   output$contributors <- renderText({
-    length(studies() %>% select(CONTACT_1) %>% as_vector() %>% unique()) + 
-      length(studies() %>% select(CONTACT_2) %>% as_vector() %>% unique())
+    bind_rows(studies(), large.studies() %>% as_tibble()) %>% distinct(CONTACT_1) %>% nrow() +
+    bind_rows(studies(), large.studies() %>% as_tibble()) %>% distinct(CONTACT_2) %>% nrow()
   })
-  output$taxa <- renderText({length(studies() %>% select(TAXA) %>% as_vector() %>% unique())})
-  output$biome <- renderText({length(studies() %>% select(BIOME_MAP) %>% as_vector() %>% unique())})
-  output$years <- renderText({studies() %>% select(DURATION) %>% max()})
+  output$taxa <- renderText({bind_rows(studies(), large.studies() %>% as_tibble()) %>% distinct(TAXA) %>% nrow() })
+  output$biome <- renderText({bind_rows(studies(), large.studies() %>% as_tibble()) %>% distinct(BIOME_MAP) %>% nrow()})
+  output$years <- renderText({bind_rows(studies(), large.studies() %>% as_tibble()) %>% select(DURATION) %>% max()})
   
   # draw the map
   output$StudyMap <- renderLeaflet({
-    studies() %>% 
       leaflet(options = leafletOptions(minZoom=1.3, worldCopyJump=F)) %>%
       setView(lng=0, lat=0, zoom=1.25) %>% 
       addProviderTiles(providers$CartoDB.VoyagerNoLabels) %>%
-      addCircleMarkers(~CENT_LONG, ~CENT_LAT, radius=~DURATION/12+6,
+      addPolygons(data=large.studies(), 
+                  fillOpacity=0.4, fillColor=~pal(NUMBER_OF_SPECIES), weight=1, color='#155f4933',
+                  highlightOptions = highlightOptions(color = "#155f49", weight = 2.5, fillOpacity=0.7, bringToFront = F),
+                  popup = ~paste0("<h5>", TITLE,"</h5>",
+                                  '<h6>', CONTACT_1, ', ', CONTACT_2,'</h6>',
+                                  "<strong>Duration: </strong>",START_YEAR," to ",END_YEAR,"<br/>",
+                                  "<strong>Taxa: </strong>",TAXA, "<br/>",
+                                  "<strong>Biome: </strong>", BIOME_MAP)) %>% 
+      addCircleMarkers(data=studies(), ~CENT_LONG, ~CENT_LAT, radius=~DURATION/15+6,
                        fillOpacity=0.4, fillColor=~pal(NUMBER_OF_SPECIES), weight=1.1, color='#155f49',
+                       clusterOptions = markerClusterOptions(clickable=T, riseOnHover=T, freezeAtZoom = 4),
                        popup = ~paste0("<h5>", TITLE,"</h5>",
                                        '<h6>', CONTACT_1, ', ', CONTACT_2,'</h6>',
                                        "<strong>Duration: </strong>",START_YEAR," to ",END_YEAR,"<br/>",
                                        "<strong>Taxa: </strong>",TAXA, "<br/>",
-                                       "<strong>Biome: </strong>", BIOME_MAP)) %>% 
-      addLegend(position='bottomright', title='Number of species', pal=pal, opacity=1,
+                                       "<strong>Biome: </strong>", BIOME_MAP)) %>%
+      addLegend(data=studies(), position='bottomright', title='Number of species', pal=pal, opacity=1,
                 values=~NUMBER_OF_SPECIES)
   })
   
