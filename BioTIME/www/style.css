@@ -1,9 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Fira+Code&family=Public+Sans:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=Red+Hat+Text:ital,wght@0,500;0,700;1,500;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code&family=Public+Sans:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=Barlow:ital,wght@0,500;0,700;1,500;1,700&display=swap');
 
 /* DEFINE VARIABLES */
 :root {
   --Font1: 'Public Sans', 'sans-serif';
-  --Font2: 'Red Hat Text', 'sans-serif';
+  --Font2: 'Barlow', 'sans-serif';
   --Font3: 'Fira Code', monospace;
   --color-text: #1f3340;
   --color-em: #155f49;
@@ -14,12 +14,42 @@ body {
       font-family: var(--Font1);
       color: var(--color-text);
     }
+
+#mapwrap {
+	width: 100vw;
+	height: 100%;
+	position: absolute;
+	top: 0;
+	left: 0;
+	padding: 0;
+	margin:0;
+}
+
+#trendwrap {
+	width: 100vw;
+	height: 100vh;
+	position: absolute;
+	top: 100%;
+	left: 0;
+}
+
+#StudyMap {
+	width: 100%;
+	height: 100%;
+	visibility: inherit;
+	position: relative;
+	bottom: 0px;
+}
     
 #maprow {
-  width: 100vw;
-  height: auto;
-  position: relative;
-  left: 0;
+    width: 100vw;
+    height: calc(100% - 120px);
+    position: absolute;
+    left: 0;
+    top: 120px;
+    margin: 0;
+    padding: 0;
+}
 }
     
 #title {
@@ -40,6 +70,47 @@ body {
       width: 40px;
       height: auto;
     }
+
+ #count {
+  width: 100%;
+  min-height: 80px;
+  height: auto;
+  position: absolute;
+  top: 30px;
+  left: 0;
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  align-content: start
+}
+
+#count .stat {
+  flex: 0 0 auto;
+  margin: 0 15px 15px 15px;
+  min-width: 100px;
+  width: auto;
+  text-align: center;
+}
+
+
+
+#count h1 { /* changing summary numbers */
+      font-weight: normal;
+      font-family: var(--Font3);
+      font-size: 50px;
+      margin: 0;
+      line-height: 100%;
+    }
+#count h4 { /* summary number labels */
+      font-weight: bold;
+      font-family: var(--Font2);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin: 4px 0;
+      font-size: 14px;
+    }
     
 /* CONTROL PANEL ACCORDION*/
 
@@ -48,6 +119,7 @@ body {
   height: auto;
   top: 20px;
   left: 20px;
+  z-index: 50!important;
 }
 
 h2 {
@@ -164,32 +236,7 @@ button:hover, .btn:hover, .btn-default:hover, .action-button:hover {
   background-color: #FFFFFF;
 }
 
-#count {
-  width: 50%;
-  height: 150px;
-  position: relative;
-  top: 50px;
-  left: 25%;
-  text-align: center;
-}
 
-#count .col-sm-1 {
-  width: 20%;
-}
-
-#count h1 { /* changing summary numbers */
-      font-weight: normal;
-      font-family: var(--Font3);
-      font-size: 50px;
-      margin: 0;
-      line-height: 100%;
-    }
-#count h4 { /* summary number labels */
-      font-weight: 600;
-      font-family: 'Public Sans', 'sans-serif';
-      margin: 4px 0;
-      font-size: 16px;
-    }
     
 /* Sliding input bar */
 .irs-bar, .irs-to, .irs-from {
@@ -202,26 +249,90 @@ button:hover, .btn:hover, .btn-default:hover, .action-button:hover {
     font-size: 11px;
   }
   
-.leaflet-popup-content {font-family: 'Public Sans', 'sans-serif';}
+.leaflet-popup-content {font-family: 'Public Sans', 'sans-serif'; z-index: 99; font-size: 13px;}
     
-.leaflet-popup-wrapper {border: none;}
+.leaflet-popup-wrapper {border: none; z-index: 99;}
     
 .leaflet-popup-content h5 {
-    font-weight: 500;
-    font-family: var(--Font2);
-    font-size: 18px;
+    font-weight: bold;
+    font-family: var(--Font1);
+    font-size: 16px;
     color: var(--color-em);
     line-height: 110%;
     margin: 0 0 6px 0;
   
 }
+
+.marker-cluster div span {
+	line-height: 22px!important;
+	font-family: var(--Font2)!important;
+	font-weight:500!important;
+	color: var(--color-text)!important;
+}
+
+.marker-cluster:hover div span {
+	color: #FFFFFF!important;
+}
+
+.marker-cluster-large, .marker-cluster-medium, .marker-cluster-small {
+	background-color: transparent!important;
+}
+
+.marker-cluster-large div {
+	background-color: #FFFFFFAA!important;
+	border: 2px solid var(--color-text)!important;
+	font-family: var(--Font2)!important;
+	font-weight:500!important;
+	font-size: 15px!important;
+}
+
+.marker-cluster-large:hover div {
+	background-color: #cf7941!important;
+	color: #FFFFFF!important;
+}
+
+.marker-cluster-medium div {
+	background-color: #FFFFFFAA!important;
+	border: 2px solid var(--color-text)!important;
+	font-family: var(--Font2)!important;
+	font-weight: 500!important;
+	font-size: 16px!important;
+	transform: scale(0.8)!important;
+}
+
+.marker-cluster-medium:hover div {
+	background-color: #cf7941!important;
+	color: #FFFFFF!important;}
+
+.marker-cluster-small div {
+	background-color: #FFFFFFAA!important;
+	border: 2px solid var(--color-text)!important;
+	font-family: var(--Font2)!important;
+	font-weight: 500!important;
+	font-size: 18px!important;
+	transform: scale(0.7)!important;
+}
+
+.marker-cluster-small:hover div {
+	background-color: #cf7941!important;
+	color: #FFFFFF!important;}
+
+path.leaflet-interactive {
+	opacity: 0.8!important;
+}
+
+path.leaflet-interactive:hover {
+	opacity: 1.0!important;
+}
     
 .leaflet-popup-content h6 {
-      font-weight: 600;
-      font-family: 'Public Sans', 'sans-serif';
-      font-size: 14px;
-      line-height: 100%;
-      margin: 0 0 10px 0;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-family: var(--Font2);
+      font-size: 12.5px;
+      line-height: 120%;
+      margin: 6px 0 10px 0;
       
     }
     .leaflet-control-zoom {top: 440px;}
