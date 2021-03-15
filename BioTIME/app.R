@@ -81,20 +81,18 @@ ui <- fluidPage(
   ),
   useShinyjs(),
   
-  # Application title
-  div(id='title', p("BioTIME Dataset Map")),
-  tags$img(id='logo', src='https://i.postimg.cc/R0VdD7G9/Bio-Time-Logo-Transparent.png'),
-  div(id='count',
-      column(1, h1(textOutput('studies')), h4('studies'), align='center'),
-      column(1, h1(textOutput('years')), h4('years'), align='center'),
-      column(1, h1(textOutput('contributors')), h4('contributors'), align='center'),
-      column(1, h1(textOutput('taxa')), h4('taxa'), align='center'),
-      column(1, h1(textOutput('biome')), h4('biomes'), align='center')
+  div(id='mapwrap',
+  fluidRow(id='count',
+      div(class='stat', h1(textOutput('studies')), h4('studies')),
+      div(class='stat', h1(textOutput('years')), h4('years')),
+      div(class='stat', h1(textOutput('contributors')), h4('contributors')),
+      div(class='stat', h1(textOutput('taxa')), h4('taxa')),
+      div(class='stat', h1(textOutput('biome')), h4('biomes'))
   ),
   
   # Dataset map
   fluidRow(id='maprow',
-           leafletOutput("StudyMap", height='85vh'), #output map
+           leafletOutput("StudyMap", height='100%'), #output map
            
            absolutePanel(id='control', draggable=T, # control panel
                          h2('Filter datasets'),
@@ -130,8 +128,9 @@ ui <- fluidPage(
                                                            round = T, ticks = F, animate = FALSE))),
                          actionButton('reset', 'Reset')
            )
-  ),
+  )),
   
+  div(id='trendwrap',
   # Diversity trends
   fluidRow(id="trendrow",
            column(width=3, 
@@ -161,7 +160,7 @@ ui <- fluidPage(
                   h3('Beta diversity'),
                   plotlyOutput('beta_div', width='90%', height='50vh')
            )
-  )
+  ))
 )
 
 
@@ -189,9 +188,9 @@ server <- function(input, output) {
   })
   
   # create a palette for the leaflet map to use
-  pal <- colorBin(palette=biotime_cols(palette='gradient')(8),
-                  domain=0:max(BT_datasets$NUMBER_OF_SPECIES),
-                  bins=c(0,50,100,250,500,1000,2000,5000,10000), pretty=T)
+  pal <- colorBin(palette=biotime_cols(palette='gradient')(5),
+                  domain=2:130,
+                  bins=c(2,10,25,50,100,130), pretty=T)
   
   # generate a reactive dataset summary statistic counter
   output$studies <- renderText({studies() %>% distinct(STUDY_ID, .keep_all = T) %>%
@@ -208,25 +207,38 @@ server <- function(input, output) {
   output$StudyMap <- renderLeaflet({
       leaflet(options = leafletOptions(minZoom=1.3, worldCopyJump=F)) %>%
       setView(lng=0, lat=0, zoom=1.25) %>% 
-      addProviderTiles(providers$CartoDB.VoyagerNoLabels) %>%
+      addProviderTiles(providers$CartoDB.PositronNoLabels) %>%
       addPolygons(data=large.studies(), 
-                  fillOpacity=0.4, fillColor=~pal(NUMBER_OF_SPECIES), weight=1, color='#155f4933',
-                  highlightOptions = highlightOptions(color = "#155f49", weight = 2.5, fillOpacity=0.7, bringToFront = F),
+                  fillOpacity=0.5, fillColor=~pal(DURATION), weight=0.5, color='#155f4933',
+                  highlightOptions = highlightOptions(fillOpacity=0.9,fillColor='#cf7941', bringToFront = F),
                   popup = ~paste0("<h5>", TITLE,"</h5>",
                                   '<h6>', CONTACT_1, ', ', CONTACT_2,'</h6>',
                                   "<strong>Duration: </strong>",START_YEAR," to ",END_YEAR,"<br/>",
                                   "<strong>Taxa: </strong>",TAXA, "<br/>",
                                   "<strong>Biome: </strong>", BIOME_MAP)) %>% 
-      addCircleMarkers(data=studies(), ~CENT_LONG, ~CENT_LAT, radius=~DURATION/15+6,
-                       fillOpacity=0.4, fillColor=~pal(NUMBER_OF_SPECIES), weight=1.1, color='#155f49',
-                       clusterOptions = markerClusterOptions(clickable=T, riseOnHover=T, freezeAtZoom = 4),
+      addCircleMarkers(data=studies(), ~CENT_LONG, ~CENT_LAT, radius=~DURATION/15+6, 
+                       opacity=1, fillOpacity=1, fillColor=~pal(DURATION), weight=2, color='#155f49',
+                       clusterOptions = markerClusterOptions(clickable=T, riseOnHover=T, freezeAtZoom = 4,
+                                                             iconCreateFunction=JS("function (cluster) {    
+                                        var childCount = cluster.getChildCount(); 
+                                        var c = ' marker-cluster-';  
+                                        if (childCount > 30) {  
+                                          c += 'large';  
+                                        } else if (childCount > 10) {  
+                                          c += 'medium';
+                                        } else { 
+                                          c += 'small';  
+                                        }    
+                                        return new L.DivIcon({ html: '<div><span>' + childCount + '</span></div>', className: 'marker-cluster' + c, iconSize: new L.Point(40, 40) });
+                                    
+                                      }")),
                        popup = ~paste0("<h5>", TITLE,"</h5>",
                                        '<h6>', CONTACT_1, ', ', CONTACT_2,'</h6>',
                                        "<strong>Duration: </strong>",START_YEAR," to ",END_YEAR,"<br/>",
                                        "<strong>Taxa: </strong>",TAXA, "<br/>",
                                        "<strong>Biome: </strong>", BIOME_MAP)) %>%
-      addLegend(data=studies(), position='bottomright', title='Number of species', pal=pal, opacity=1,
-                values=~NUMBER_OF_SPECIES)
+      addLegend(data=bind_rows(studies(), large.studies() %>% as_tibble()), position='bottomright', title='Duration', pal=pal, opacity=1,
+                values=~DURATION)
   })
   
 
