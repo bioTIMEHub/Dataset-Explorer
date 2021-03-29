@@ -20,7 +20,7 @@ require(leaflet.providers)
 
 # if running outside of BioTIME server
 # SET WORKING DIRECTORY FIRST :) choose the directory where all the source data files are held (should be src)
-setwd(choose.dir())
+setwd(file.choose() %>% dirname())
 # BioTIME color functions
 source('scale_gg_biotime.R')
 BT_datasets <- read.csv('working_data.csv', header=T) # table for dataset metadata
