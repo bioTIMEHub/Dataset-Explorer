@@ -2,4 +2,5 @@
 .Rhistory
 .RData
 .Ruserdata
-bioTIME-shiny.Rproj
+.Rproj
+.DS_Store
