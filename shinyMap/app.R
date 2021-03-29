@@ -3,18 +3,15 @@
 # Description: Explores BioTIME datasets by mapping the global coverage of data sets, attributing contributors,
 # and shows trends from Science 2014 paper.
 # Author: Cher Chow
-# Updated: 4 Mar 2021
+# Updated: 29 Mar 2021
 
+require(utils) # for choose directory
 require(shiny)
 require(shinyjs)
 #require(RMariaDB)
 #require(DBI)
 require(tidyverse)
 require(plotly)
-require(maps)
-require(sp)
-require(sf)
-require(rgdal)
 require(leaflet)
 require(leaflet.providers)
 
@@ -22,12 +19,12 @@ require(leaflet.providers)
 # Data set up -------------------------------------------------------------
 
 # if running outside of BioTIME server
-# SET WORKING DIRECTORY FIRST :) choose a file in your desired working directory
-setwd(file.choose() %>% dirname())
+# SET WORKING DIRECTORY FIRST :) choose the directory where all the source data files are held (should be src)
+setwd(choose.dir())
 # BioTIME color functions
 source('scale_gg_biotime.R')
 BT_datasets <- read.csv('working_data.csv', header=T) # table for dataset metadata
-study.extents <- readRDS('large_extent_studies3.rds')
+study.extents <- readRDS('large_extent_studies.rds')
 study.extents <- st_as_sf(study.extents) %>% st_set_crs("+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=km +no_defs") %>% 
   st_transform(., 4326)
 # study_coords <- read.csv('study_coords.csv', header=T) # table of dataset coordinates (can be > 1)
@@ -177,7 +174,7 @@ server <- function(input, output) {
 
 # Dataset map -------------------------------------------------------------
   
-  sing.studies <- readRDS('single_cell_studies3.rds') # load vector listing studies that are too small to plot extents
+  sing.studies <- readRDS('single_cell_studies.rds') # load vector listing studies that are too small to plot extents
   BT_datasets <- BT_datasets %>% filter(STUDY_ID %in% sing.studies)
   studies <- reactive({ # make a working dataframe based on the filter options from the input
     BT_datasets %>% filter(DURATION >= input$Duration[1] & DURATION <= input$Duration[2] & REALM %in% input$Realm & TAXA %in% input$Taxa & CLIMATE %in% input$Climate)
