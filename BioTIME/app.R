@@ -22,10 +22,10 @@ require(leaflet.providers)
 # Data set up -------------------------------------------------------------
 
 # if running outside of BioTIME server
-# SET WORKING DIRECTORY FIRST :)
-setwd("~/OneDrive - University of St Andrews/BioTIME/Shiny")
+# SET WORKING DIRECTORY FIRST :) choose a file in your desired working directory
+setwd(file.choose() %>% dirname())
 # BioTIME color functions
-source('biotime_ggcolors.R')
+source('scale_gg_biotime.R')
 BT_datasets <- read.csv('working_data.csv', header=T) # table for dataset metadata
 study.extents <- readRDS('large_extent_studies3.rds')
 study.extents <- st_as_sf(study.extents) %>% st_set_crs("+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=km +no_defs") %>% 
