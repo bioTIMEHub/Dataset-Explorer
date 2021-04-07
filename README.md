@@ -1,6 +1,6 @@
 
 # Dataset Explorer for BioTIME
-#### An interactive Shiny app to visually show the time-series datasets in the BioTIME database  
+### An interactive Shiny app to visually show the time-series datasets in the BioTIME database  
 **Author** Cher Chow  
 **Contact** fycc1 at st-andrews.ac.uk or through GitHub.  
 
@@ -16,3 +16,9 @@ The shinyMap app is a version with only the dataset map (intended for the main w
 
 ### shinyTrends
 Work in progress! This will be a full page data explorer that also incorporates dataset filtering and showing diversity trends from our 2014 (Dornelas et al.) and 2019 (Blowes et al.) Science papers. 
+
+## Running the app locally
+1. Clone a local copy of the repository.
+2. In the subfolder of the app you want to run (either `shinyMap` or `shinyTrends`), open `app.R` in RStudio.
+3. Click the Run button that shows up in the upper-right corner of RStudio.
+4. This should run out of the box smoothly except that it'll prompt a pop-up in RStudio to set the working directory. Choose any file within the src folder.
