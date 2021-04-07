@@ -2,6 +2,8 @@
 # BioTIME App
 # Description: Explores BioTIME datasets by mapping the global coverage of data sets, attributing contributors,
 # and shows trends from Science 2014 paper.
+# preserves the map and the filter link with diversity trends.
+# Intend for use on the Explore page for more detailed exploration.
 # Author: Cher Chow
 # Updated: 4 Mar 2021
 
@@ -11,8 +13,6 @@ require(shinyjs)
 #require(DBI)
 require(tidyverse)
 require(plotly)
-require(maps)
-require(sp)
 require(sf)
 require(rgdal)
 require(leaflet)
@@ -41,8 +41,6 @@ study.extents <- st_as_sf(study.extents) %>% st_set_crs("+proj=merc +lon_0=0 +k=
 # BT_datasets <- full_join(studies, contributors, by="STUDY_ID")
 # link dataset info with contributors
 # BT_datasets <- datasets %>% mutate(DURATION=END_YEAR-START_YEAR)
-# create a column for time-series duration
-# study_coords <- dbGetQuery(Connection, 'select distinct STUDY_ID, LATITUDE, LONGITUDE from allrawdata')
 
 BT_datasets$DURATION <- BT_datasets$DURATION+1 # year inclusive
 BT_datasets$TAXA <- as.factor(BT_datasets$TAXA)
