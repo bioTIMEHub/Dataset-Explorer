@@ -42,10 +42,12 @@ for (i in 1:length(filenames)) {
 View(stats)
 rm(raw) # once visual check shows it's okay, delete the rawdata tables
 str(stats) # make sure things are numeric
+stats <- stats %>% mutate(across(.cols = everything(), as.numeric))
 stats <- stats %>% mutate(DURATION = END_YEAR - START_YEAR + 1) # +1 for year inclusive
 
 new_studies <- bind_cols(site, DS, contacts, stats)
 View(new_studies)
-new_studies$STUDY_ID <- paste0('U', 1:length(filenames)) # assign some dummy study IDs. U for unpublished.
-
-
+new_studies$STUDY_ID <- paste0('2.', 1:length(filenames)) %>% as.numeric() 
+# assign some dummy study IDs. 2.number to distinguish them from current public studies
+new_studies$CONTACT_2 <- str_replace_all(new_studies$CONTACT_2, '0', '')
+write.csv(new_studies, file='/Volumes/Cherbet/BioTIME/Dataset-Explorer/src/new_studies.csv', col.names=T, na='') # export the final dataframe

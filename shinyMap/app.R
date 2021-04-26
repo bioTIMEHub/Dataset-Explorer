@@ -3,7 +3,7 @@
 # Description: Explores BioTIME datasets by mapping the global coverage of data sets, attributing contributors,
 # and shows trends from Science 2014 paper.
 # Author: Cher Chow
-# Updated: 29 Mar 2021
+# Updated: 26 Apr 2021
 
 require(shiny)
 require(shinyjs)
@@ -23,7 +23,7 @@ require(leaflet.providers)
 setwd(file.choose() %>% dirname())
 # BioTIME color functions
 source('scale_gg_biotime.R')
-BT_datasets <- read.csv('working_data.csv', header=T) # table for dataset metadata
+BT_datasets <- read.csv('app_data.csv', header=T) # table for dataset metadata
 study.extents <- readRDS('large_extent_studies.rds') # load the hex cell study extents
 # transform the spatial data to fit the original BioTIME WGS datum
 study.extents <- st_as_sf(study.extents) %>% st_set_crs("+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=km +no_defs") %>% 
