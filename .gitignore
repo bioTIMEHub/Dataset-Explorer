@@ -1,5 +1,8 @@
-.Rproj.user
-.Rhistory
-.Ruserdata
-.Rproj
+*.Rproj.user
+*.Rhistory
+*.Ruserdata
+*.Rproj
+
+# Mac temporary files
 .DS_Store
+*._*
