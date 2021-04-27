@@ -26,8 +26,8 @@ set.seed(24)
 # BioTIME color functions
 source('scale_gg_biotime.R')
 BT_datasets <- read.csv('app_data.csv', header=T) # table for dataset metadata
-study.extents <- readRDS('large_extent_studies_test.rds') # load the hex cell study extents
-sing.studies <- readRDS('single_cell_studies_test.rds') # load vector listing studies that are too small to plot extents
+study.extents <- readRDS('large_extent_studies.rds') # load the hex cell study extents
+sing.studies <- readRDS('single_cell_studies.rds') # load vector listing studies that are too small to plot extents
 
 # Housekeeping after importing
 BT_datasets$TAXA <- as.factor(BT_datasets$TAXA)
