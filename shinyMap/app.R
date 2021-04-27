@@ -20,7 +20,8 @@ require(leaflet.providers)
 
 # SET WORKING DIRECTORY FIRST :)
 # select the app_data.csv file. this sets the working directory to the src folder
-setwd(file.choose() %>% dirname())
+setwd('/Volumes/Cherbet/BioTIME/Dataset-Explorer/src')
+set.seed(24)
 
 # BioTIME color functions
 source('scale_gg_biotime.R')
@@ -112,9 +113,12 @@ server <- function(input, output) {
 
 # Dataset map -------------------------------------------------------------
   
-  BT_datasets <- BT_datasets %>% filter(STUDY_ID %in% sing.studies) # split the working data for large vs single studies
-  studies <- reactive({ # make a working dataframe based on the filter options from the input
+  datasets <- reactive({
     BT_datasets %>% filter(DURATION >= input$Duration[1] & DURATION <= input$Duration[2] & REALM %in% input$Realm & TAXA %in% input$Taxa & CLIMATE %in% input$Climate)
+  })
+  
+  studies <- reactive({ # make a working dataframe based on the filter options from the input
+    BT_datasets %>% filter(STUDY_ID %in% sing.studies) %>% filter(DURATION >= input$Duration[1] & DURATION <= input$Duration[2] & REALM %in% input$Realm & TAXA %in% input$Taxa & CLIMATE %in% input$Climate)
   })
   
   large.studies <- reactive({
@@ -127,15 +131,11 @@ server <- function(input, output) {
                   bins=c(2,10,25,50,100,130), pretty=T)
   
   # generate a reactive dataset summary statistic counter
-  output$studies <- renderText({studies() %>% distinct(STUDY_ID, .keep_all = T) %>%
-      bind_rows(., large.studies() %>% as_tibble() %>% distinct(STUDY_ID, .keep_all = T)) %>% distinct(STUDY_ID) %>% nrow()})
-  output$contributors <- renderText({
-    bind_rows(studies(), large.studies() %>% as_tibble()) %>% distinct(CONTACT_1) %>% nrow() +
-    bind_rows(studies(), large.studies() %>% as_tibble()) %>% distinct(CONTACT_2) %>% nrow()
-  })
-  output$taxa <- renderText({bind_rows(studies(), large.studies() %>% as_tibble()) %>% distinct(TAXA) %>% nrow() })
-  output$biome <- renderText({bind_rows(studies(), large.studies() %>% as_tibble()) %>% distinct(BIOME_MAP) %>% nrow()})
-  output$years <- renderText({bind_rows(studies(), large.studies() %>% as_tibble()) %>% select(DURATION) %>% max()})
+  output$studies <- renderText({datasets() %>% select(STUDY_ID) %>% n_distinct()})
+  output$contributors <- renderText({c(datasets() %>% select(CONTACT_1) %>% as_vector(), datasets() %>% select(CONTACT_2) %>% as_vector()) %>% n_distinct()})
+  output$taxa <- renderText({datasets() %>% select(TAXA) %>% n_distinct()})
+  output$biome <- renderText({datasets() %>% select(BIOME_MAP) %>% n_distinct()})
+  output$years <- renderText({datasets() %>% select(DURATION) %>% max()})
   
   # draw the map
   output$StudyMap <- renderLeaflet({

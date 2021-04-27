@@ -53,20 +53,21 @@ stats <- stats %>% mutate(DURATION = END_YEAR - START_YEAR + 1) # +1 for year in
 
 new_studies <- bind_cols(site, DS, contacts, stats)
 View(new_studies)
-new_studies$STUDY_ID <- paste0('2.', 1:length(filenames)) %>% as.numeric()
+new_studies$STUDY_ID <- paste0('2000', 1:length(filenames)) %>% as.numeric()
 # assign some dummy study IDs. 2.number to distinguish them from current public studies
 new_studies$CONTACT_2 <- str_replace_all(new_studies$CONTACT_2, '0', '')
 write.csv(new_studies, file='/Volumes/Cherbet/BioTIME/Dataset-Explorer/src/new_studies.csv', col.names=T, na='') # export the final dataframe
 
 # Merge
 working_data <- read.csv(file.choose(), header=T) # read in working_data.csv to merge
+# working_data$DURATION <- working_data$DURATION + 1
 full_join(working_data, new_studies) %>% write.csv(., file='/Volumes/Cherbet/BioTIME/Dataset-Explorer/src/app_data.csv', col.names=T, row.names=F, na='')
 
 # Study_coords file -------------------------------------------------------
 
 new_coords <- lapply(raw, function(x) x %>% distinct(Latitude, Longitude) %>% as_tibble())
 for (i in 1:length(filenames)) {
-  new_coords[[i]]['STUDY_ID'] <- rep(paste0('2.', i), dim(new_coords[[i]])[1]) %>% as.numeric()
+  new_coords[[i]]['STUDY_ID'] <- rep(paste0('2000', i), dim(new_coords[[i]])[1]) %>% as.numeric()
 } # put in Study ID identifiers
 new_coords <- do.call(rbind.data.frame, new_coords)
 

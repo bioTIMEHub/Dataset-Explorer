@@ -93,7 +93,7 @@ study_coords <- study_coords %>% distinct(STUDY_ID, hexcell) %>% filter(!STUDY_I
 study_coords <- study_coords %>% filter(!is.na(hexcell))
 
 mult.cell.studies <- study_coords %>% arrange(STUDY_ID) %>% filter(duplicated(STUDY_ID)) %>% distinct(STUDY_ID) %>% dplyr::select(STUDY_ID) %>% as_vector()
-sing.cell.studies <- study_coords %>% arrange(STUDY_ID) %>% filter(!duplicated(STUDY_ID)) %>% distinct(STUDY_ID) %>% dplyr::select(STUDY_ID) %>% as_vector()
+sing.cell.studies <- study_coords %>% arrange(STUDY_ID) %>% filter(!STUDY_ID %in% mult.cell.studies) %>% distinct(STUDY_ID) %>% dplyr::select(STUDY_ID) %>% as_vector()
 
 hex_grid_sf <- hex_grid %>% spTransform(., CRS('+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')) %>%
   st_as_sf(.) %>% st_wrap_dateline(., options='WRAPDATELINE=YES') %>%
@@ -105,6 +105,6 @@ for (i in 1:length(mult.cell.studies)) {
 }
 
 extents <- left_join(extents, BT_datasets, by='STUDY_ID')
-saveRDS(extents, file='large_extent_studies.rds')
-saveRDS(sing.cell.studies, file='single_cell_studies.rds')
-save.image(file='study_extents.RData')
+saveRDS(extents, file='large_extent_studies_test.rds')
+saveRDS(sing.cell.studies, file='single_cell_studies_test.rds')
+save.image(file='study_extents_test.RData')
