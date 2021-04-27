@@ -1,8 +1,7 @@
 
 # Generate hexagon grid polygons for BioTIME studies
 # Author: Cher Chow
-# Updated: 29 Mar 2021
-
+# Updated: 27 Apr 2021
 
 require(tidyverse)
 require(maps)
@@ -12,18 +11,21 @@ require(sf)
 require(maptools)
 require(utils)
 
-setwd(choose.dir()) # choose the directory containing all the Shiny source data files
+setwd(file.choose() %>% dirname()) # select the app_data.csv file in the Shiny source folder. sets wd to the src folder
 
 # import study metadata
-BT_datasets <- read.csv('working_data.csv', header=T)
-BT_datasets$DURATION <- BT_datasets$DURATION+1 # year inclusive
+BT_datasets <- read.csv('app_data.csv', header=T, blank.lines.skip=T)
 BT_datasets$TAXA <- as.factor(BT_datasets$TAXA)
 BT_datasets$REALM <- as.factor(BT_datasets$REALM)
 BT_datasets$BIOME_MAP <- as.factor(BT_datasets$BIOME_MAP)
 BT_datasets$CLIMATE <- as.factor(BT_datasets$CLIMATE)
 BT_datasets$X <- NULL
+
+BT_datasets <- BT_datasets %>% distinct(STUDY_ID, .keep_all = T)
+
 # import study coordinates
-study_coords <- read.csv('study_coords.csv', header=T)
+study_coords <- read.csv('app_coords.csv', header=T, blank.lines.skip=T)
+study_coords[c(117618,121261,169392),1] <- 169 # fix STUDY_ID bug
 
 # spatial points data (without coordinates)
 study.data <- left_join(study_coords, BT_datasets, by="STUDY_ID")

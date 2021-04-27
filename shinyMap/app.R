@@ -18,36 +18,25 @@ require(leaflet.providers)
 
 # Data set up -------------------------------------------------------------
 
-# if running outside of BioTIME server
-# SET WORKING DIRECTORY FIRST :) choose the directory where all the source data files are held (should be src)
+# SET WORKING DIRECTORY FIRST :)
+# select the app_data.csv file. this sets the working directory to the src folder
 setwd(file.choose() %>% dirname())
+
 # BioTIME color functions
 source('scale_gg_biotime.R')
 BT_datasets <- read.csv('app_data.csv', header=T) # table for dataset metadata
-study.extents <- readRDS('large_extent_studies.rds') # load the hex cell study extents
-# transform the spatial data to fit the original BioTIME WGS datum
-study.extents <- st_as_sf(study.extents) %>% st_set_crs("+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=km +no_defs") %>% 
-  st_transform(., 4326)
-# study_coords <- read.csv('study_coords.csv', header=T) # table of dataset coordinates (can be > 1)
+study.extents <- readRDS('large_extent_studies_test.rds') # load the hex cell study extents
+sing.studies <- readRDS('single_cell_studies_test.rds') # load vector listing studies that are too small to plot extents
 
-## if running for real on BioTIME server, uncomment these lines
-# Set up BioTIME database connection
-# Connection <- dbConnect(RMariaDB::MariaDB(), dbname="biotimedb", username="btteam", password="20Biotime17", host="127.0.0.1")
-# get dataset coordinates
-# studies <- dbGetQuery(Connection, "SELECT STUDY_ID, CENT_LAT, CENT_LONG, TAXA, TITLE, START_YEAR, END_YEAR, NUMBER_OF_SPECIES from datasets")
-# contributors <- dbGetQuery(Connection, "SELECT STUDY_ID, CONTACT_1, CONTACT_2 from contacts")
-# BT_datasets <- full_join(studies, contributors, by="STUDY_ID")
-# link dataset info with contributors
-# BT_datasets <- datasets %>% mutate(DURATION=END_YEAR-START_YEAR)
-# create a column for time-series duration
-# study_coords <- dbGetQuery(Connection, 'select distinct STUDY_ID, LATITUDE, LONGITUDE from allrawdata')
-
-BT_datasets$DURATION <- BT_datasets$DURATION+1 # year inclusive
+# Housekeeping after importing
 BT_datasets$TAXA <- as.factor(BT_datasets$TAXA)
 BT_datasets$REALM <- as.factor(BT_datasets$REALM)
 BT_datasets$BIOME_MAP <- as.factor(BT_datasets$BIOME_MAP)
 BT_datasets$CLIMATE <- as.factor(BT_datasets$CLIMATE)
 
+# transform the spatial data to fit the original BioTIME WGS datum
+study.extents <- st_as_sf(study.extents) %>% st_set_crs("+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=km +no_defs") %>% 
+  st_transform(., 4326)
 
 # User Interface (Frontend) ---------------------------------------------------------------
 ui <- fluidPage(
@@ -123,8 +112,7 @@ server <- function(input, output) {
 
 # Dataset map -------------------------------------------------------------
   
-  sing.studies <- readRDS('single_cell_studies.rds') # load vector listing studies that are too small to plot extents
-  BT_datasets <- BT_datasets %>% filter(STUDY_ID %in% sing.studies)
+  BT_datasets <- BT_datasets %>% filter(STUDY_ID %in% sing.studies) # split the working data for large vs single studies
   studies <- reactive({ # make a working dataframe based on the filter options from the input
     BT_datasets %>% filter(DURATION >= input$Duration[1] & DURATION <= input$Duration[2] & REALM %in% input$Realm & TAXA %in% input$Taxa & CLIMATE %in% input$Climate)
   })
