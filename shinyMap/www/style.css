@@ -264,7 +264,7 @@ button:hover, .btn:hover, .btn-default:hover, .action-button:hover {
 }
 
 .marker-cluster div span {
-	line-height: 22px!important;
+	line-height: 24px!important;
 	font-family: var(--Font2)!important;
 	font-weight:500!important;
 	color: var(--color-text)!important;
@@ -297,7 +297,8 @@ button:hover, .btn:hover, .btn-default:hover, .action-button:hover {
 	font-family: var(--Font2)!important;
 	font-weight: 500!important;
 	font-size: 16px!important;
-	transform: scale(0.8)!important;
+	transform: scale(0.9)!important;
+	width: 25px!important; height: 25px!important;
 }
 
 .marker-cluster-medium:hover div {
@@ -310,7 +311,7 @@ button:hover, .btn:hover, .btn-default:hover, .action-button:hover {
 	font-family: var(--Font2)!important;
 	font-weight: 500!important;
 	font-size: 18px!important;
-	transform: scale(0.7)!important;
+	transform: scale(0.8)!important;
 }
 
 .marker-cluster-small:hover div {
