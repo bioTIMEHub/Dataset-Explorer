@@ -75,7 +75,7 @@ make_grid <- function(x, cell_diameter, cell_area, clip = FALSE) {
 
 # make a hexagon grid to overlay the area that covers all our studies
 # remember units are in km! 
-hex_grid <- make_grid(hulls, cell_area = 450^2, clip = FALSE)
+hex_grid <- make_grid(hulls, cell_area = 300^2, clip = FALSE)
 
 # for each hexagon cell that overlays our study points, match the attributes from that study point to that cell
 # your R will be incapacitated for a while
@@ -105,6 +105,6 @@ for (i in 1:length(mult.cell.studies)) {
 }
 
 extents <- left_join(extents, BT_datasets, by='STUDY_ID')
-saveRDS(extents, file='large_extent_studies_test.rds')
-saveRDS(sing.cell.studies, file='single_cell_studies_test.rds')
-save.image(file='study_extents_test.RData')
+saveRDS(extents, file='large_extent_studies.rds')
+saveRDS(sing.cell.studies, file='single_cell_studies.rds')
+save.image(file='study_extents.RData')

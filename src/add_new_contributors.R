@@ -8,6 +8,7 @@
 rm(list=ls(all.name=T)) # clear environment
 
 require(dplyr) # data wrangling
+require(stringr)
 require(readxl) # reading excel sheets
 
 filenames <- list.files(path = '/Users/cher/Dropbox/towards BioTIME v2/NewStudies', pattern = '.xlsx$', full.names = T)
