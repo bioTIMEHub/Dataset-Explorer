@@ -115,11 +115,18 @@ body {
 /* CONTROL PANEL ACCORDION*/
 
 #control {
-  width: 17%;
+  width: 15%;
   height: auto;
   top: 20px;
   left: 20px;
   z-index: 50!important;
+  opacity: 0.5;
+  min-width: 200px;
+  transition: .3s opacity ease;
+}
+
+#control:hover {
+  opacity: 1;
 }
 
 h2 {
@@ -129,12 +136,22 @@ h2 {
 
 .accordion{
   transform: translateZ(0);
-  border-bottom: 1px solid #DDDDDD;
+  border: 1.5px solid var(--color-text);
   font-size: 13px;
   margin: 10px 0;
-  border-radius: 5px;
-  background-color: #FFFFFFDD;
+  border-radius: 10px;
+  background-color: #FFFFFFEE;
   padding: 10px;
+}
+
+.form-group {
+  margin-bottom: 0;
+}
+
+.irs-slider {
+  border: 1.5px solid var(--color-text);
+  box-shadow: none;
+  background-color: #FFF;
 }
 
 /* toggle arrow indicator */
@@ -148,10 +165,14 @@ h2 {
   position: relative;
   display: block;
   line-height: 100%;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
+  font-family: var(--Font2);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
   cursor: pointer;
   color: var(--color-em);
+  margin: 2px 0;
 }
 
 .accordion > label:after {
@@ -159,9 +180,10 @@ h2 {
   position: absolute;
   top: 0;
   right: 0;
-  font-size: 27px;
-  margin: 0;
-  color: #999999;
+  line-height: 14px;
+  font-size: 28px;
+  margin: -2px 0;
+  color: var(--color-text);
   font-weight: normal;
   transform: rotate(0deg);
   transition: .3s transform ease;
@@ -235,8 +257,6 @@ button:hover, .btn:hover, .btn-default:hover, .action-button:hover {
   color: var(--color-accent);
   background-color: #FFFFFF;
 }
-
-
     
 /* Sliding input bar */
 .irs-bar, .irs-to, .irs-from {
@@ -249,19 +269,42 @@ button:hover, .btn:hover, .btn-default:hover, .action-button:hover {
     font-size: 11px;
   }
   
-.leaflet-popup-content {font-family: 'Public Sans', 'sans-serif'; z-index: 99; font-size: 13px;}
+.leaflet-popup-content {font-family: 'Public Sans', 'sans-serif'; z-index: 99!important; font-size: 14px;}
     
 .leaflet-popup-wrapper {border: none; z-index: 99;}
     
 .leaflet-popup-content h5 {
-    font-weight: bold;
+    font-weight: 600;
     font-family: var(--Font1);
-    font-size: 16px;
+    font-size: 17px;
     color: var(--color-em);
-    line-height: 110%;
+    line-height: 120%;
     margin: 0 0 6px 0;
   
 }
+    
+.leaflet-popup-content h6 {
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      font-family: var(--Font2);
+      font-size: 14px;
+      line-height: 120%;
+      margin: 6px 0 10px 0;
+      
+}
+    
+.leaflet-container a.leaflet-popup-close-button {
+  padding: 0;
+  margin: 7px 7px 0 0;
+  font-size: 22px;
+  font-family: monospace;
+  font-weight: normal;
+  color: var(--color-text);
+}
+
+.leaflet-control-zoom {top: 440px;}
+.col-sm-1 {width: auto; padding: 0 15px;}
 
 .marker-cluster {
   width: 20px!important;
@@ -331,16 +374,3 @@ path.leaflet-interactive {
 path.leaflet-interactive:hover {
 	opacity: 1.0!important;
 }
-    
-.leaflet-popup-content h6 {
-      font-weight: bold;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      font-family: var(--Font2);
-      font-size: 12.5px;
-      line-height: 120%;
-      margin: 6px 0 10px 0;
-      
-    }
-    .leaflet-control-zoom {top: 440px;}
-    .col-sm-1 {width: auto; padding: 0 15px;}

@@ -11,7 +11,7 @@ require(sf)
 require(maptools)
 require(utils)
 
-setwd(file.choose() %>% dirname()) # select the app_data.csv file in the Shiny source folder. sets wd to the src folder
+setwd('src/') # select the app_data.csv file in the Shiny source folder. sets wd to the src folder
 
 # import study metadata
 BT_datasets <- read.csv('app_data.csv', header=T, blank.lines.skip=T)
@@ -105,6 +105,5 @@ for (i in 1:length(mult.cell.studies)) {
 }
 
 extents <- left_join(extents, BT_datasets, by='STUDY_ID')
-saveRDS(extents, file='large_extent_studies.rds')
-saveRDS(sing.cell.studies, file='single_cell_studies.rds')
-save.image(file='study_extents.RData')
+save(extents, file='large_extent_studies.RData')
+save(sing.cell.studies, file='single_cell_studies.RData')

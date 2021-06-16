@@ -13,7 +13,6 @@ require(tidyverse)
 require(plotly)
 require(leaflet)
 require(sf)
-require(leaflet.providers)
 
 
 # Data set up -------------------------------------------------------------
@@ -25,9 +24,11 @@ set.seed(24)
 
 # BioTIME color functions
 source('scale_gg_biotime.R')
+
+# load data
 BT_datasets <- read.csv('app_data.csv', header=T) # table for dataset metadata
-study.extents <- readRDS('large_extent_studies.rds') # load the hex cell study extents
-sing.studies <- readRDS('single_cell_studies.rds') # load vector listing studies that are too small to plot extents
+load('large_extent_studies.RData') # load the hex cell study extents
+load('single_cell_studies.RData') # load vector listing studies that are too small to plot extents
 
 # Housekeeping after importing
 BT_datasets$TAXA <- as.factor(BT_datasets$TAXA)
@@ -36,7 +37,7 @@ BT_datasets$BIOME_MAP <- as.factor(BT_datasets$BIOME_MAP)
 BT_datasets$CLIMATE <- as.factor(BT_datasets$CLIMATE)
 
 # transform the spatial data to fit the original BioTIME WGS datum
-study.extents <- st_as_sf(study.extents) %>% st_set_crs("+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=km +no_defs") %>% 
+extents <- st_as_sf(extents) %>% st_set_crs("+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=km +no_defs") %>% 
   st_transform(., 4326)
 
 # User Interface (Frontend) ---------------------------------------------------------------
@@ -118,11 +119,11 @@ server <- function(input, output) {
   })
   
   studies <- reactive({ # make a working dataframe based on the filter options from the input
-    BT_datasets %>% filter(STUDY_ID %in% sing.studies) %>% filter(DURATION >= input$Duration[1] & DURATION <= input$Duration[2] & REALM %in% input$Realm & TAXA %in% input$Taxa & CLIMATE %in% input$Climate)
+    BT_datasets %>% filter(STUDY_ID %in% sing.cell.studies) %>% filter(DURATION >= input$Duration[1] & DURATION <= input$Duration[2] & REALM %in% input$Realm & TAXA %in% input$Taxa & CLIMATE %in% input$Climate)
   })
   
   large.studies <- reactive({
-    study.extents %>% filter(DURATION >= input$Duration[1] & DURATION <= input$Duration[2] & REALM %in% input$Realm & TAXA %in% input$Taxa & CLIMATE %in% input$Climate)
+    extents %>% filter(DURATION >= input$Duration[1] & DURATION <= input$Duration[2] & REALM %in% input$Realm & TAXA %in% input$Taxa & CLIMATE %in% input$Climate)
   })
   
   # create a palette for the leaflet map to use
@@ -137,16 +138,20 @@ server <- function(input, output) {
   output$biome <- renderText({datasets() %>% pull(BIOME_MAP) %>% n_distinct()})
   output$years <- renderText({datasets() %>% pull(DURATION) %>% max()})
   
+  # url for custom BioTIME color basemap tiles
+  BioTIMEtile <- 'https://api.mapbox.com/styles/v1/biotime/ckpz9jzdk2u7117lm6fngw29j/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiYmlvdGltZSIsImEiOiJja3B6OWhzaDkxbnloMndwOXhtYnM3cGtoIn0.MMtE79hfFUUDQxXOQHmqxg'
+  
   # draw the map
   output$StudyMap <- renderLeaflet({
       leaflet(options = leafletOptions(minZoom=1.3, worldCopyJump=F)) %>%
       setView(lng=0, lat=0, zoom=1.25) %>% 
-      addProviderTiles(providers$CartoDB.PositronNoLabels) %>%
+      # addProviderTiles(providers$CartoDB.PositronNoLabels) %>%
+      addTiles(urlTemplate=BioTIMEtile) %>% 
       addPolygons(data=large.studies(), # add the large extent studies by hex polygons we generated
                   fillOpacity=0.5, fillColor=~pal(DURATION), weight=1.2, color='#155f4933',
                   highlightOptions = highlightOptions(fillOpacity=0.9,fillColor='#cf7941', bringToFront = F),
                   popup = ~paste0("<h5>", TITLE,"</h5>",
-                                  '<h6>', CONTACT_1, ', ', CONTACT_2,'</h6>',
+                                  '<h6>', CONTACT_1, ifelse(CONTACT_2 != '', ', ', ''), CONTACT_2,' et al. </h6>',
                                   "<strong>Duration: </strong>",START_YEAR," to ",END_YEAR,"<br/>",
                                   "<strong>Taxa: </strong>",TAXA, "<br/>",
                                   "<strong>Biome: </strong>", BIOME_MAP)) %>% 
@@ -168,7 +173,7 @@ server <- function(input, output) {
                                     
                                       }")),
                        popup = ~paste0("<h5>", TITLE,"</h5>",
-                                       '<h6>', CONTACT_1, ', ', CONTACT_2,'</h6>',
+                                       '<h6>', CONTACT_1, ifelse(CONTACT_2 != '', ', ', ''), CONTACT_2,' et al. </h6>',
                                        "<strong>Duration: </strong>",START_YEAR," to ",END_YEAR,"<br/>",
                                        "<strong>Taxa: </strong>",TAXA, "<br/>",
                                        "<strong>Biome: </strong>", BIOME_MAP)) %>%
