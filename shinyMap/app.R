@@ -7,10 +7,7 @@
 
 require(shiny)
 require(shinyjs)
-#require(RMariaDB)
-#require(DBI)
 require(tidyverse)
-require(plotly)
 require(leaflet)
 require(sf)
 
@@ -19,16 +16,17 @@ require(sf)
 
 # SET WORKING DIRECTORY FIRST :)
 # select the app_data.csv file. this sets the working directory to the src folder
-setwd('/Volumes/Cherbet/BioTIME/Dataset-Explorer/src')
+# setwd('/Volumes/Cherbet/BioTIME/Dataset-Explorer/src')
+# in server, working directory for server side defaults to the app folder
 set.seed(24)
 
 # BioTIME color functions
-source('scale_gg_biotime.R')
+source('/src/scale_gg_biotime.R')
 
 # load data
-BT_datasets <- read.csv('app_data.csv', header=T) # table for dataset metadata
-load('large_extent_studies.RData') # load the hex cell study extents
-load('single_cell_studies.RData') # load vector listing studies that are too small to plot extents
+BT_datasets <- read.csv('/src/app_data.csv', header=T) # table for dataset metadata
+load('/src/large_extent_studies.RData') # load the hex cell study extents
+load('/src/single_cell_studies.RData') # load vector listing studies that are too small to plot extents
 
 # Housekeeping after importing
 BT_datasets$TAXA <- as.factor(BT_datasets$TAXA)
@@ -44,7 +42,7 @@ extents <- st_as_sf(extents) %>% st_set_crs("+proj=merc +lon_0=0 +k=1 +x_0=0 +y_
 ui <- fluidPage(
   tags$head(
     # Style import
-    tags$link(rel = "stylesheet", type = "text/css", href = "style.css")
+    tags$link(rel = "stylesheet", type = "text/css", href = "style.css") # things on UI/client side are located in www folder
     # all assets that have to be accessible for frontend like css or images have to be in the www folder
   ),
   useShinyjs(),
