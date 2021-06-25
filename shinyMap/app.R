@@ -33,16 +33,14 @@ BT_datasets$TAXA <- as.factor(BT_datasets$TAXA)
 BT_datasets$REALM <- as.factor(BT_datasets$REALM)
 BT_datasets$BIOME_MAP <- as.factor(BT_datasets$BIOME_MAP)
 BT_datasets$CLIMATE <- as.factor(BT_datasets$CLIMATE)
+# year inclusive
+BT_datasets$DURATION <- BT_datasets$DURATION + 1
 
-extents$TAXA <- str_to_title(extents$TAXA) # fix mismatched title case for levels
-extents$TAXA <- as.factor(extents$TAXA)
-extents$REALM <- as.factor(extents$REALM)
-extents$BIOME_MAP <- as.factor(extents$BIOME_MAP)
-extents$CLIMATE <- as.factor(extents$CLIMATE)
-
+extents <- left_join(extents, BT_datasets, by='STUDY_ID')
 wgs84 <- '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'
 
 # transform the spatial data to fit the original BioTIME WGS datum
+st_crs(extents) <- merckm # safety net for mismatched GDAL package versions
 extents <- st_transform(extents, wgs84)
 
 # User Interface (Frontend) ---------------------------------------------------------------
@@ -156,7 +154,7 @@ server <- function(input, output) {
       # addProviderTiles(providers$CartoDB.PositronNoLabels) %>%
       addTiles(urlTemplate=BioTIMEtile) %>% 
       addPolygons(data=large.studies(), # add the large extent studies by hex polygons we generated
-                  fillOpacity=0.5, fillColor=~pal(DURATION), weight=1.2, color='#155f4933',
+                  fillOpacity=0.5, fillColor=~pal(DURATION), weight=1.4, color='#155f4966',
                   highlightOptions = highlightOptions(fillOpacity=0.9,fillColor='#cf7941', bringToFront = F),
                   popup = ~paste0("<h5>", TITLE,"</h5>",
                                   '<h6>', CONTACT_1, ifelse(CONTACT_2 != '', ', ', ''), CONTACT_2,' et al. </h6>',

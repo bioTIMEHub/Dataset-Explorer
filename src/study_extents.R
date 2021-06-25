@@ -9,7 +9,7 @@ require(maptools)
 require(utils)
 
 set.seed(24)
-setwd('src/') # select the app_data.csv file in the Shiny source folder. sets wd to the src folder
+#setwd('src/') # select the app_data.csv file in the Shiny source folder. sets wd to the src folder
 # intended to be run under Dataset-Explorer R Project file
 
 # import study coordinates
@@ -18,7 +18,7 @@ study_coords[c(117618,121261,169392),1] <- 169 # fix STUDY_ID bug
 
 wgs84 <- '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs' # BioTIME default
 # web mercator in km
-merckm <- '+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +a=6378137 +b=6378137 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs '
+merckm <- '+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +a=6378137 +b=6378137 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs'
 
 # create a multipoint sf object with dataset coordinates (from rawdata tables)
 studies_pointsonly <- study_coords %>% dplyr::select(LONGITUDE, LATITUDE) %>% 
@@ -89,7 +89,5 @@ ggplot() +
   geom_sf(data=extents %>% st_transform(., wgs84), aes(fill=STUDY_ID), alpha=0.5) +
   coord_sf(crs=wgs84)
 
-BT_datasets <- read.csv('app_data.csv', header=T, blank.lines.skip=T)
-extents <- left_join(extents, BT_datasets, by='STUDY_ID')
 save(extents, file='hex_studies.RData')
 save(sing.cell.studies, file='circle_studies.RData')
