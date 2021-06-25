@@ -260,7 +260,7 @@ button:hover, .btn:hover, .btn-default:hover, .action-button:hover {
     
 /* Sliding input bar */
 .irs-bar, .irs-to, .irs-from {
-      background-color: var(--color-accent); border: none;
+      background-color: var(--color-accent)!important; border: none;
     }
     
 /* Leaflet map styling */

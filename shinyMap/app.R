@@ -3,7 +3,6 @@
 # Description: Explores BioTIME datasets by mapping the global coverage of data sets, attributing contributors,
 # and shows trends from Science 2014 paper.
 # Author: Cher Chow
-# Updated: 26 Apr 2021
 
 require(shiny)
 require(shinyjs)
@@ -21,22 +20,30 @@ require(sf)
 set.seed(24)
 
 # BioTIME color functions
-source('/src/scale_gg_biotime.R')
+source('./src/scale_gg_biotime.R')
 
 # load data
-BT_datasets <- read.csv('/src/app_data.csv', header=T) # table for dataset metadata
-load('/src/large_extent_studies.RData') # load the hex cell study extents
-load('/src/single_cell_studies.RData') # load vector listing studies that are too small to plot extents
+BT_datasets <- read.csv('./src/app_data.csv', header=T) # table for dataset metadata
+load('./src/hex_studies.RData') # load the hex cell study extents
+load('./src/circle_studies.RData') # load vector listing studies that are too small to plot extents
 
 # Housekeeping after importing
+BT_datasets$TAXA <- str_to_title(BT_datasets$TAXA) # fix mismatched title case for levels
 BT_datasets$TAXA <- as.factor(BT_datasets$TAXA)
 BT_datasets$REALM <- as.factor(BT_datasets$REALM)
 BT_datasets$BIOME_MAP <- as.factor(BT_datasets$BIOME_MAP)
 BT_datasets$CLIMATE <- as.factor(BT_datasets$CLIMATE)
 
+extents$TAXA <- str_to_title(extents$TAXA) # fix mismatched title case for levels
+extents$TAXA <- as.factor(extents$TAXA)
+extents$REALM <- as.factor(extents$REALM)
+extents$BIOME_MAP <- as.factor(extents$BIOME_MAP)
+extents$CLIMATE <- as.factor(extents$CLIMATE)
+
+wgs84 <- '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'
+
 # transform the spatial data to fit the original BioTIME WGS datum
-extents <- st_as_sf(extents) %>% st_set_crs("+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=km +no_defs") %>% 
-  st_transform(., 4326)
+extents <- st_transform(extents, wgs84)
 
 # User Interface (Frontend) ---------------------------------------------------------------
 ui <- fluidPage(
@@ -112,22 +119,25 @@ server <- function(input, output) {
 
 # Dataset map -------------------------------------------------------------
   
+  # dataframe with information but not split (tallies)
   datasets <- reactive({
     BT_datasets %>% filter(DURATION >= input$Duration[1] & DURATION <= input$Duration[2] & REALM %in% input$Realm & TAXA %in% input$Taxa & CLIMATE %in% input$Climate)
   })
   
-  studies <- reactive({ # make a working dataframe based on the filter options from the input
-    BT_datasets %>% filter(STUDY_ID %in% sing.cell.studies) %>% filter(DURATION >= input$Duration[1] & DURATION <= input$Duration[2] & REALM %in% input$Realm & TAXA %in% input$Taxa & CLIMATE %in% input$Climate)
+  studies <- reactive({ # make a working dataframe for single cell studies based on the filter options from the input
+    BT_datasets %>% filter(STUDY_ID %in% sing.cell.studies) %>% 
+      filter(DURATION >= input$Duration[1] & DURATION <= input$Duration[2] & REALM %in% input$Realm & TAXA %in% input$Taxa & CLIMATE %in% input$Climate)
   })
   
+  # make a working dataframe for large extent (hex cell) studies based on the filter options from the input
   large.studies <- reactive({
     extents %>% filter(DURATION >= input$Duration[1] & DURATION <= input$Duration[2] & REALM %in% input$Realm & TAXA %in% input$Taxa & CLIMATE %in% input$Climate)
   })
   
   # create a palette for the leaflet map to use
-  pal <- colorBin(palette=biotime_cols(palette='gradient')(5),
+  pal <- colorBin(palette=intPalette(biotime_palettes[['gradient']][2:5])(5),
                   domain=2:130,
-                  bins=c(2,10,25,50,100,130), pretty=T)
+                  bins=c(2,10,25,50,100,130))
   
   # generate a reactive dataset summary statistic counter
   output$studies <- renderText({datasets() %>% filter(STUDY_ID < 600) %>% pull(STUDY_ID) %>% n_distinct()})
@@ -153,22 +163,22 @@ server <- function(input, output) {
                                   "<strong>Duration: </strong>",START_YEAR," to ",END_YEAR,"<br/>",
                                   "<strong>Taxa: </strong>",TAXA, "<br/>",
                                   "<strong>Biome: </strong>", BIOME_MAP)) %>% 
-      addCircleMarkers(data=studies(), ~CENT_LONG, ~CENT_LAT, radius=~DURATION/15+6, 
+      addCircleMarkers(data=studies(), ~CENT_LONG, ~CENT_LAT, radius=~DURATION/15+6,
                        opacity=1, fillOpacity=1, fillColor=~pal(DURATION), weight=2, color='#155f49',
                        clusterOptions = markerClusterOptions(clickable=T, riseOnHover=T, freezeAtZoom = 5,
                                                              # specify custom cluster thresholds with a javascript function
-                                                             iconCreateFunction=JS("function (cluster) {    
-                                        var childCount = cluster.getChildCount(); 
-                                        var c = ' marker-cluster-';  
-                                        if (childCount > 30) {  
-                                          c += 'large';  
-                                        } else if (childCount > 10) {  
+                                                             iconCreateFunction=JS("function (cluster) {
+                                        var childCount = cluster.getChildCount();
+                                        var c = ' marker-cluster-';
+                                        if (childCount > 30) {
+                                          c += 'large';
+                                        } else if (childCount > 10) {
                                           c += 'medium';
-                                        } else { 
-                                          c += 'small';  
-                                        }    
+                                        } else {
+                                          c += 'small';
+                                        }
                                         return new L.DivIcon({ html: '<div><span>' + childCount + '</span></div>', className: 'marker-cluster' + c, iconSize: new L.Point(40, 40) });
-                                    
+
                                       }")),
                        popup = ~paste0("<h5>", TITLE,"</h5>",
                                        '<h6>', CONTACT_1, ifelse(CONTACT_2 != '', ', ', ''), CONTACT_2,' et al. </h6>',
