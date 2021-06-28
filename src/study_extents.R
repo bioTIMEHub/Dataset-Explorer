@@ -9,7 +9,7 @@ require(maptools)
 require(utils)
 
 set.seed(24)
-#setwd('src/') # select the app_data.csv file in the Shiny source folder. sets wd to the src folder
+setwd('src/') # select the app_data.csv file in the Shiny source folder. sets wd to the src folder
 # intended to be run under Dataset-Explorer R Project file
 
 # import study coordinates
@@ -60,7 +60,8 @@ study_coords <- study_coords %>% distinct(STUDY_ID, hexcell) # keep only distinc
 # check if there are any NAs
 study_coords %>% filter(is.na(hexcell)|hexcell == ''|hexcell == 0)
 
-nHex <- study_coords %>% group_by(STUDY_ID) %>% count() # create a dataframe where n = number of hex cells per study
+nHex <- study_coords %>% group_by(STUDY_ID) %>% count() %>% arrange(n, STUDY_ID) 
+# create a dataframe where n = number of hex cells per study
 # vector that helps index multiple cell studies from single cell studies
 mult.cell.studies <- nHex %>% filter(n > 1) %>% pull(STUDY_ID)
 sing.cell.studies <- nHex %>% filter(n == 1) %>% pull(STUDY_ID)

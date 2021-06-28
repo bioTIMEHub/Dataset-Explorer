@@ -29,6 +29,7 @@ load('./src/circle_studies.RData') # load vector listing studies that are too sm
 
 # Housekeeping after importing
 BT_datasets$TAXA <- str_to_title(BT_datasets$TAXA) # fix mismatched title case for levels
+BT_datasets$TAXA <- str_replace_all(BT_datasets$TAXA, 'All', 'Multiple') 
 BT_datasets$TAXA <- as.factor(BT_datasets$TAXA)
 BT_datasets$REALM <- as.factor(BT_datasets$REALM)
 BT_datasets$BIOME_MAP <- as.factor(BT_datasets$BIOME_MAP)
@@ -38,6 +39,7 @@ BT_datasets$DURATION <- BT_datasets$DURATION + 1
 
 extents <- left_join(extents, BT_datasets, by='STUDY_ID')
 wgs84 <- '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'
+merckm <- '+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +a=6378137 +b=6378137 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs'
 
 # transform the spatial data to fit the original BioTIME WGS datum
 st_crs(extents) <- merckm # safety net for mismatched GDAL package versions
@@ -63,12 +65,12 @@ ui <- fluidPage(
   
     # Dataset map
     fluidRow(id='maprow',
-             leafletOutput("StudyMap", height='100%'), #output map
+             leafletOutput("StudyMap"), #output map
              
              absolutePanel(id='control', draggable=T, # control panel
                            h2('Filter datasets'),
                            tags$div(class="accordion",
-                                    tags$input(id='tog_realm', type='checkbox', class='accordion-toggle', name='toggle', checked=NA),
+                                    tags$input(id='tog_realm', type='checkbox', class='accordion-toggle', name='toggle'),
                                     tags$label(`for`='tog_realm', 'Realm'),
                                     tags$section(checkboxGroupInput('Realm', label=NULL,
                                                                     choiceNames=levels(BT_datasets$REALM),
@@ -92,12 +94,16 @@ ui <- fluidPage(
                                                                     choiceValues=levels(BT_datasets$CLIMATE)))),
                            
                            tags$div(class="accordion",
-                                    tags$input(id='tog_dur', type='checkbox', class='accordion-toggle', name='toggle', checked=NA),
+                                    tags$input(id='tog_dur', type='checkbox', class='accordion-toggle', name='toggle'),
                                     tags$label(`for`='tog_dur', 'Duration (yrs)'),
                                     tags$section(sliderInput('Duration', label=NULL,
                                                              min=2, max=130, value=c(2, 130),
                                                              round = T, ticks = F, animate = FALSE))),
-                           actionButton('reset', 'Reset')
+                           checkboxInput(inputId = "newstudies", label = 'Show upcoming v2.0 studies', value=TRUE),
+                           actionButton('reset', 'Reset'),
+                           
+                           # manual marker legend
+                           tags$div(class='studies-legend')
              ) # end control panel
     ) # end row
   ) # end wrapper
@@ -122,11 +128,6 @@ server <- function(input, output) {
     BT_datasets %>% filter(DURATION >= input$Duration[1] & DURATION <= input$Duration[2] & REALM %in% input$Realm & TAXA %in% input$Taxa & CLIMATE %in% input$Climate)
   })
   
-  studies <- reactive({ # make a working dataframe for single cell studies based on the filter options from the input
-    BT_datasets %>% filter(STUDY_ID %in% sing.cell.studies) %>% 
-      filter(DURATION >= input$Duration[1] & DURATION <= input$Duration[2] & REALM %in% input$Realm & TAXA %in% input$Taxa & CLIMATE %in% input$Climate)
-  })
-  
   # make a working dataframe for large extent (hex cell) studies based on the filter options from the input
   large.studies <- reactive({
     extents %>% filter(DURATION >= input$Duration[1] & DURATION <= input$Duration[2] & REALM %in% input$Realm & TAXA %in% input$Taxa & CLIMATE %in% input$Climate)
@@ -149,11 +150,25 @@ server <- function(input, output) {
   
   # draw the map
   output$StudyMap <- renderLeaflet({
-      leaflet(options = leafletOptions(minZoom=1.3, worldCopyJump=F)) %>%
-      setView(lng=0, lat=0, zoom=1.25) %>% 
-      # addProviderTiles(providers$CartoDB.PositronNoLabels) %>%
-      addTiles(urlTemplate=BioTIMEtile) %>% 
-      addPolygons(data=large.studies(), # add the large extent studies by hex polygons we generated
+    leaflet(options = leafletOptions(minZoom=1.3, worldCopyJump=T)) %>%
+      clearBounds() %>% addEasyButton(easyButton(
+        icon="fa-globe", title="Zoom to Level 1",
+        onClick=JS("function(btn, map){ map.setView(new L.LatLng(0, 0), 1); }"))) %>% 
+      # manual legend
+      addControl(position='bottomright', html = "
+                 <ul id='legend'>
+                    <li><div id='legend-study' class='symbol'></div> Study </li>
+                    <li><div id='legend-hex' class='symbol'></div> Large-extent study</li>
+                    <li><div id='legend-cluster' class='symbol'>3</div> Study cluster</li>
+                    <li><div id='legend-new' class='symbol'></div> <div id='legend-newhex' class='symbol'></div> Upcoming studies</li>
+                </ul>
+                 ") %>% 
+      
+      # addProviderTiles(providers$CartoDB.PositronNoLabels) %>% # uncomment if Mapbox stops working
+      addTiles(urlTemplate=BioTIMEtile) %>% setMaxBounds(-180, 90, 180, -90) %>%
+      
+      # public large extent studies by hex polygons we generated
+      addPolygons(data=large.studies() %>% filter(STUDY_ID < 2000),
                   fillOpacity=0.5, fillColor=~pal(DURATION), weight=1.4, color='#155f4966',
                   highlightOptions = highlightOptions(fillOpacity=0.9,fillColor='#cf7941', bringToFront = F),
                   popup = ~paste0("<h5>", TITLE,"</h5>",
@@ -161,32 +176,63 @@ server <- function(input, output) {
                                   "<strong>Duration: </strong>",START_YEAR," to ",END_YEAR,"<br/>",
                                   "<strong>Taxa: </strong>",TAXA, "<br/>",
                                   "<strong>Biome: </strong>", BIOME_MAP)) %>% 
-      addCircleMarkers(data=studies(), ~CENT_LONG, ~CENT_LAT, radius=~DURATION/15+6,
+      
+      # public small extent studies
+      addCircleMarkers(data=datasets() %>% filter(STUDY_ID < 2000 & STUDY_ID %in% sing.cell.studies), ~CENT_LONG, ~CENT_LAT, radius=8,
                        opacity=1, fillOpacity=1, fillColor=~pal(DURATION), weight=2, color='#155f49',
-                       clusterOptions = markerClusterOptions(clickable=T, riseOnHover=T, freezeAtZoom = 5,
-                                                             # specify custom cluster thresholds with a javascript function
+                       clusterOptions = markerClusterOptions(disableClusteringAtZoom = 4, spiderfyOnMaxZoom = F, # specify custom cluster thresholds with a javascript function
                                                              iconCreateFunction=JS("function (cluster) {
-                                        var childCount = cluster.getChildCount();
-                                        var c = ' marker-cluster-';
-                                        if (childCount > 30) {
-                                          c += 'large';
-                                        } else if (childCount > 10) {
-                                          c += 'medium';
-                                        } else {
-                                          c += 'small';
-                                        }
-                                        return new L.DivIcon({ html: '<div><span>' + childCount + '</span></div>', className: 'marker-cluster' + c, iconSize: new L.Point(40, 40) });
-
-                                      }")),
+                                                            var childCount = cluster.getChildCount();
+                                                            var c = ' marker-cluster-';
+                                                            if (childCount > 30) {
+                                                              c += 'large';
+                                                            } else if (childCount > 10) {
+                                                              c += 'medium';
+                                                            } else {
+                                                              c += 'small';
+                                                            }
+                                                            return new L.DivIcon({ html: '<div><span>' + childCount + '</span></div>', className: 'marker-cluster' + c, iconSize: new L.Point(40, 40) });
+                    
+                                                          }")),
                        popup = ~paste0("<h5>", TITLE,"</h5>",
                                        '<h6>', CONTACT_1, ifelse(CONTACT_2 != '', ', ', ''), CONTACT_2,' et al. </h6>',
                                        "<strong>Duration: </strong>",START_YEAR," to ",END_YEAR,"<br/>",
                                        "<strong>Taxa: </strong>",TAXA, "<br/>",
                                        "<strong>Biome: </strong>", BIOME_MAP)) %>%
-      addLegend(data=bind_rows(studies(), large.studies() %>% as_tibble()), position='bottomright', title='Duration', pal=pal, opacity=1,
+      
+      addLegend(data=datasets(), position='bottomright', title='Duration', pal=pal, opacity=1,
                 values=~DURATION)
   })
-}  
+  
+  # add/take out new studies if option is toggled
+  observe({
+    if (input$newstudies == TRUE){
+    leafletProxy('StudyMap') %>% 
+      addPolygons(data=large.studies() %>% filter(STUDY_ID > 2000), group='new',
+                  fillOpacity=0.7, fillColor='#cf7941', weight=2, color='#cf7941',
+                  highlightOptions = highlightOptions(fillOpacity=0.9,fillColor='#155f49', color='#155f49',bringToFront = F),
+                  popup = ~paste0("<h5 style='color: #cf7941'>", TITLE,"</h5>", 
+                                  "<strong style='color: #cf7941'>Coming soon in v2.0</strong>",
+                                  '<h6>', CONTACT_1, ifelse(CONTACT_2 != '', ', ', ''), CONTACT_2,' et al. </h6>',
+                                  "<strong>Duration: </strong>",START_YEAR," to ",END_YEAR,"<br/>",
+                                  "<strong>Taxa: </strong>",TAXA, "<br/>",
+                                  "<strong>Biome: </strong>", BIOME_MAP)) %>% 
+      # coming soon new small extent studies
+      addCircleMarkers(data=datasets() %>% filter(STUDY_ID > 2000  & STUDY_ID %in% sing.cell.studies), group='new', ~CENT_LONG, ~CENT_LAT, radius=8,
+                       opacity=1, fillOpacity=1, fillColor='#cf7941aa', weight=2, color='#cf7941',
+                       popup = ~paste0("<h5 style='color: #cf7941'>", TITLE,"</h5>", 
+                                       "<strong style='color: #cf7941'>Coming soon in v2.0</strong>",
+                                       '<h6>', CONTACT_1, ifelse(CONTACT_2 != '', ', ', ''), CONTACT_2,' et al. </h6>',
+                                       "<strong>Duration: </strong>",START_YEAR," to ",END_YEAR,"<br/>",
+                                       "<strong>Taxa: </strong>",TAXA, "<br/>",
+                                       "<strong>Biome: </strong>", BIOME_MAP))
+      }
+    if (input$newstudies == FALSE) {
+      leafletProxy('StudyMap') %>% 
+        clearGroup('new')
+    }
+  })
+} # end server  
 
 # Run the application 
 shinyApp(ui = ui, server = server)
