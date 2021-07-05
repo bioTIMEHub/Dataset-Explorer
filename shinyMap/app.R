@@ -60,7 +60,8 @@ ui <- fluidPage(
         div(class='stat', h1(textOutput('years')), h4('years')),
         div(class='stat', h1(textOutput('contributors')), h4('contributors')),
         div(class='stat', h1(textOutput('taxa')), h4('taxa')),
-        div(class='stat', h1(textOutput('biome')), h4('biomes'))
+        div(class='stat', h1(textOutput('biome')), h4('biomes')),
+        div(class="warning", 'We recommend viewing our map on larger devices for the best experience')
     ),
   
     # Dataset map

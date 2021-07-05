@@ -1,9 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Fira+Code&family=Public+Sans:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=Barlow:ital,wght@0,500;0,700;1,500;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code&family=Public+Sans:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=Red+Hat+Text:ital,wght@0,400;0,500;1,400;1,500&display=swap');
 
 /* DEFINE VARIABLES */
 :root {
-  --Font1: 'Public Sans', 'sans-serif';
-  --Font2: 'Barlow', 'sans-serif';
+  --Font1: 'Public Sans', sans-serif;
+  --Font2: 'Red Hat Text', sans-serif;
   --Font3: 'Fira Code', monospace;
   --color-text: #1f3340;
   --color-em: #155f49;
@@ -61,7 +61,9 @@ body {
  #count {
   flex: 0 0 auto;
   width: 100%;
-  min-height: 120px;
+  min-height: 100px;
+  box-sizing: border-box;
+  padding: 25px;
   height: auto;
   top: 30px;
   left: 0;
@@ -86,18 +88,27 @@ body {
 #count h1 { /* changing summary numbers */
       font-weight: normal;
       font-family: var(--Font3);
-      font-size: 50px;
+      font-size: 60px;
       margin: 0;
       line-height: 100%;
     }
 #count h4 { /* summary number labels */
-      font-weight: bold;
-      font-family: var(--Font2);
-      text-transform: uppercase;
-      letter-spacing: 2px;
+      font-weight: 600;
+      font-family: var(--Font1);
+      text-transform: lowercase;
       margin: 4px 0;
-      font-size: 14px;
+      font-size: 18px;
     }
+    
+.warning {
+  display: none;
+  font-family: var(--Font3), monospace;
+  font-size: 15px;
+  text-align: center;
+  color: var(--color-accent);
+  opacity: 0.6;
+  margin: 10px;
+}
     
 /* CONTROL PANEL ACCORDION*/
 
@@ -109,6 +120,15 @@ body {
   z-index: 810!important;
   min-width: 200px;
   transition: .3s opacity ease;
+}
+
+@media only screen and (max-width: 800px) {
+  #control {
+    display: none;
+    /* small screens don't get to filter */
+  }
+  
+  .warning {display: block;}
 }
 
 h2 {
@@ -147,11 +167,9 @@ h2 {
   position: relative;
   display: block;
   line-height: 100%;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 500;
   font-family: var(--Font2);
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
   cursor: pointer;
   color: var(--color-em);
   margin: 2px 0;
@@ -247,7 +265,7 @@ button:hover, .btn:hover, .btn-default:hover, .action-button:hover {
     
 /* Leaflet map styling */
 .leaflet .legend {
-    font-family: 'Public Sans', 'sans-serif';
+    font-family: var(--Font1);
     font-size: 11px;
   }
   
@@ -257,14 +275,14 @@ button:hover, .btn:hover, .btn-default:hover, .action-button:hover {
     outline: 0;
 }
   
-.leaflet-popup-content {font-family: 'Public Sans', 'sans-serif'; z-index: 99!important; font-size: 14px;}
+.leaflet-popup-content {font-family: var(--Font1); z-index: 99!important; font-size: 14px;}
     
 .leaflet-popup-wrapper {border: none; z-index: 900!important;}
     
 .leaflet-popup-content h5 {
-    font-weight: 600;
-    font-family: var(--Font1);
-    font-size: 17px;
+    font-weight: 500;
+    font-family: var(--Font2);
+    font-size: 18px;
     color: var(--color-em);
     line-height: 120%;
     margin: 0 0 6px 0;
@@ -272,11 +290,9 @@ button:hover, .btn:hover, .btn-default:hover, .action-button:hover {
 }
     
 .leaflet-popup-content h6 {
-      font-weight: bold;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      font-family: var(--Font2);
-      font-size: 14px;
+      font-weight: 600;
+      font-family: var(--Font1);
+      font-size: 16px;
       line-height: 120%;
       margin: 6px 0 10px 0;
       
@@ -311,8 +327,8 @@ button:hover, .btn:hover, .btn-default:hover, .action-button:hover {
 }
 
 .marker-cluster div span {
-	line-height: 22px!important;
-	font-family: var(--Font2)!important;
+	line-height: 24px!important;
+	font-family: var(--Font1)!important;
 	font-weight:500!important;
 	color: var(--color-text)!important;
 }
@@ -328,7 +344,7 @@ button:hover, .btn:hover, .btn-default:hover, .action-button:hover {
 .marker-cluster-large div {
 	background-color: #FFFFFFAA!important;
 	border: 2px solid var(--color-text)!important;
-	font-family: var(--Font2)!important;
+	font-family: var(--Font1)!important;
 	font-weight:500!important;
 	font-size: 15px!important;
 }
@@ -341,7 +357,7 @@ button:hover, .btn:hover, .btn-default:hover, .action-button:hover {
 .marker-cluster-medium div {
 	background-color: #FFFFFFAA!important;
 	border: 2px solid var(--color-text)!important;
-	font-family: var(--Font2)!important;
+	font-family: var(--Font1)!important;
 	font-weight: 500!important;
 	font-size: 16px!important;
 	transform: scale(0.9)!important;
@@ -354,7 +370,7 @@ button:hover, .btn:hover, .btn-default:hover, .action-button:hover {
 .marker-cluster-small div {
 	background-color: #FFFFFFAA!important;
 	border: 2px solid var(--color-text)!important;
-	font-family: var(--Font2)!important;
+	font-family: var(--Font1)!important;
 	font-weight: 500!important;
 	font-size: 18px!important;
 	transform: scale(0.8)!important;
@@ -444,7 +460,7 @@ div#legend-cluster {
   border-radius: 50%;
   border: 1.5px solid var(--color-text);
   background-color: #FFF;
-  font-family: 'Barlow', sans-serif;
+  font-family: var(--Font3);
   font-size: 12px;
   font-weight: 500;
 }
