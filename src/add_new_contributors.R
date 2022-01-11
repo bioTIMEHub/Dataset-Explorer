@@ -60,7 +60,7 @@ new_studies$CONTACT_2 <- str_replace_all(new_studies$CONTACT_2, '0', '')
 write.csv(new_studies, file='/Volumes/Cherbet/BioTIME/Dataset-Explorer/src/new_studies.csv', col.names=T, na='') # export the final dataframe
 
 # Merge
-working_data <- read.csv('/Volumes/Cherbet/BioTIME/Dataset-Explorer/src/working_data.csv', header=T) # read in working_data.csv to merge
+working_data <- read.csv(file.choose(), header=T) # read in working_data.csv to merge
 # working_data$DURATION <- working_data$DURATION + 1
 full_join(working_data, new_studies) %>% write.csv(., file='/Volumes/Cherbet/BioTIME/Dataset-Explorer/src/app_data.csv', col.names=T, row.names=F, na='')
 
@@ -80,6 +80,6 @@ write.csv(new_coords, file = '/Volumes/Cherbet/BioTIME/Dataset-Explorer/src/new_
 new_coords <- new_coords %>% mutate(across(where(is.character), as.numeric))
 
 # Merge
-coords <- read.csv('/Volumes/Cherbet/BioTIME/Dataset-Explorer/src/study_coords.csv', header=T) # read in study coords to merge
+coords <- read.csv(file.choose(), header=T) # read in study coords to merge
 full_join(coords, new_coords) %>% write.csv(., file='/Volumes/Cherbet/BioTIME/Dataset-Explorer/src/app_coords.csv', col.names=T, row.names=F, na='')
 

@@ -1,7 +1,6 @@
 
 # BioTIME App
-# Description: Explores BioTIME datasets by mapping the global coverage of data sets, attributing contributors,
-# and shows trends from Science 2014 paper.
+# Description: Explores BioTIME datasets by mapping the global coverage of data sets, attributing contributors
 # Author: Cher Chow
 
 require(shiny)
@@ -55,58 +54,58 @@ ui <- fluidPage(
   useShinyjs(),
   
   div(id='mapwrap',
-    fluidRow(id='count',
-        div(class='stat', h1(textOutput('studies')), h4('studies')),
-        div(class='stat', h1(textOutput('years')), h4('years')),
-        div(class='stat', h1(textOutput('contributors')), h4('contributors')),
-        div(class='stat', h1(textOutput('taxa')), h4('taxa')),
-        div(class='stat', h1(textOutput('biome')), h4('biomes')),
-        div(class="warning", 'We recommend viewing our map on larger devices for the best experience')
-    ),
-  
-    # Dataset map
-    fluidRow(id='maprow',
-             leafletOutput("StudyMap"), #output map
-             
-             absolutePanel(id='control', draggable=T, # control panel
-                           h2('Filter datasets'),
-                           tags$div(class="accordion",
-                                    tags$input(id='tog_realm', type='checkbox', class='accordion-toggle', name='toggle'),
-                                    tags$label(`for`='tog_realm', 'Realm'),
-                                    tags$section(checkboxGroupInput('Realm', label=NULL,
-                                                                    choiceNames=levels(BT_datasets$REALM),
-                                                                    selected=levels(BT_datasets$REALM),
-                                                                    choiceValues=levels(BT_datasets$REALM)))),
-                           
-                           tags$div(class="accordion",
-                                    tags$input(id='tog_taxa', type='checkbox', class='accordion-toggle', name='toggle'),
-                                    tags$label(`for`='tog_taxa', 'Taxa'),
-                                    tags$section(checkboxGroupInput('Taxa', label=NULL,
-                                                                    choiceNames=levels(BT_datasets$TAXA),
-                                                                    selected=levels(BT_datasets$TAXA),
-                                                                    choiceValues=levels(BT_datasets$TAXA)))),
-                           
-                           tags$div(class="accordion",
-                                    tags$input(id='tog_climate', type='checkbox', class='accordion-toggle', name='toggle'),
-                                    tags$label(`for`='tog_climate', 'Climate'),
-                                    tags$section(checkboxGroupInput('Climate', label=NULL,
-                                                                    choiceNames=levels(BT_datasets$CLIMATE),
-                                                                    selected=levels(BT_datasets$CLIMATE),
-                                                                    choiceValues=levels(BT_datasets$CLIMATE)))),
-                           
-                           tags$div(class="accordion",
-                                    tags$input(id='tog_dur', type='checkbox', class='accordion-toggle', name='toggle'),
-                                    tags$label(`for`='tog_dur', 'Duration (yrs)'),
-                                    tags$section(sliderInput('Duration', label=NULL,
-                                                             min=2, max=130, value=c(2, 130),
-                                                             round = T, ticks = F, animate = FALSE))),
-                           checkboxInput(inputId = "newstudies", label = 'Show upcoming v2.0 studies', value=TRUE),
-                           actionButton('reset', 'Reset'),
-                           
-                           # manual marker legend
-                           tags$div(class='studies-legend')
-             ) # end control panel
-    ) # end row
+      fluidRow(id='count',
+               div(class='stat', h1(textOutput('studies')), h4('studies')),
+               div(class='stat', h1(textOutput('years')), h4('years')),
+               div(class='stat', h1(textOutput('contributors')), h4('contributors')),
+               div(class='stat', h1(textOutput('taxa')), h4('taxa')),
+               div(class='stat', h1(textOutput('biome')), h4('biomes')),
+               div(class="warning", 'We recommend viewing our map on larger devices for the best experience')
+      ),
+      
+      # Dataset map
+      fluidRow(id='maprow',
+               leafletOutput("StudyMap"), #output map
+               
+               absolutePanel(id='control', draggable=T, # control panel
+                             h2('Filter datasets'),
+                             tags$div(class="accordion",
+                                      tags$input(id='tog_realm', type='checkbox', class='accordion-toggle', name='toggle'),
+                                      tags$label(`for`='tog_realm', 'Realm'),
+                                      tags$section(checkboxGroupInput('Realm', label=NULL,
+                                                                      choiceNames=levels(BT_datasets$REALM),
+                                                                      selected=levels(BT_datasets$REALM),
+                                                                      choiceValues=levels(BT_datasets$REALM)))),
+                             
+                             tags$div(class="accordion",
+                                      tags$input(id='tog_taxa', type='checkbox', class='accordion-toggle', name='toggle'),
+                                      tags$label(`for`='tog_taxa', 'Taxa'),
+                                      tags$section(checkboxGroupInput('Taxa', label=NULL,
+                                                                      choiceNames=levels(BT_datasets$TAXA),
+                                                                      selected=levels(BT_datasets$TAXA),
+                                                                      choiceValues=levels(BT_datasets$TAXA)))),
+                             
+                             tags$div(class="accordion",
+                                      tags$input(id='tog_climate', type='checkbox', class='accordion-toggle', name='toggle'),
+                                      tags$label(`for`='tog_climate', 'Climate'),
+                                      tags$section(checkboxGroupInput('Climate', label=NULL,
+                                                                      choiceNames=levels(BT_datasets$CLIMATE),
+                                                                      selected=levels(BT_datasets$CLIMATE),
+                                                                      choiceValues=levels(BT_datasets$CLIMATE)))),
+                             
+                             tags$div(class="accordion",
+                                      tags$input(id='tog_dur', type='checkbox', class='accordion-toggle', name='toggle'),
+                                      tags$label(`for`='tog_dur', 'Duration (yrs)'),
+                                      tags$section(sliderInput('Duration', label=NULL,
+                                                               min=2, max=130, value=c(2, 130),
+                                                               round = T, ticks = F, animate = FALSE))),
+                             checkboxInput(inputId = "newstudies", label = 'Show upcoming v2.0 studies', value=TRUE),
+                             actionButton('reset', 'Reset'),
+                             
+                             # manual marker legend
+                             tags$div(class='studies-legend')
+               ) # end control panel
+      ) # end row
   ) # end wrapper
 ) # end UI
 
@@ -121,8 +120,8 @@ server <- function(input, output) {
     reset('control')
   })
   
-
-# Dataset map -------------------------------------------------------------
+  
+  # Dataset map -------------------------------------------------------------
   
   # dataframe with information but not split (tallies)
   datasets <- reactive({
@@ -152,7 +151,7 @@ server <- function(input, output) {
   # draw the map
   output$StudyMap <- renderLeaflet({
     leaflet(options = leafletOptions(minZoom=1.3, worldCopyJump=T)) %>%
-      clearBounds() %>% addEasyButton(easyButton(
+      fitBounds(lng1=-180, lng2=180, lat1=-80, lat2=90) %>% addEasyButton(easyButton(
         icon="fa-globe", title="Zoom to Level 1",
         onClick=JS("function(btn, map){ map.setView(new L.LatLng(0, 0), 1); }"))) %>% 
       # manual legend
@@ -166,7 +165,7 @@ server <- function(input, output) {
                  ") %>% 
       
       # addProviderTiles(providers$CartoDB.PositronNoLabels) %>% # uncomment if Mapbox stops working
-      addTiles(urlTemplate=BioTIMEtile) %>% setMaxBounds(-180, 90, 180, -90) %>%
+      addTiles(urlTemplate=BioTIMEtile) %>%
       
       # public large extent studies by hex polygons we generated
       addPolygons(data=large.studies() %>% filter(STUDY_ID < 2000),
@@ -176,7 +175,8 @@ server <- function(input, output) {
                                   '<h6>', CONTACT_1, ifelse(CONTACT_2 != '', ', ', ''), CONTACT_2,' et al. </h6>',
                                   "<strong>Duration: </strong>",START_YEAR," to ",END_YEAR,"<br/>",
                                   "<strong>Taxa: </strong>",TAXA, "<br/>",
-                                  "<strong>Biome: </strong>", BIOME_MAP)) %>% 
+                                  "<strong>Biome: </strong>", BIOME_MAP,"<br/>",
+                                  "<a class='button' target='_parent' href='http://biotime.st-andrews.ac.uk/selectStudy.php?study=", STUDY_ID, "'>Go to study</a>")) %>% 
       
       # public small extent studies
       addCircleMarkers(data=datasets() %>% filter(STUDY_ID < 2000 & STUDY_ID %in% sing.cell.studies), ~CENT_LONG, ~CENT_LAT, radius=8,
@@ -199,7 +199,8 @@ server <- function(input, output) {
                                        '<h6>', CONTACT_1, ifelse(CONTACT_2 != '', ', ', ''), CONTACT_2,' et al. </h6>',
                                        "<strong>Duration: </strong>",START_YEAR," to ",END_YEAR,"<br/>",
                                        "<strong>Taxa: </strong>",TAXA, "<br/>",
-                                       "<strong>Biome: </strong>", BIOME_MAP)) %>%
+                                       "<strong>Biome: </strong>", BIOME_MAP, "<br/>",
+                                       "<a class='button' target='_parent' href='http://biotime.st-andrews.ac.uk/selectStudy.php?study=", STUDY_ID, "'>Go to study</a>")) %>%
       
       addLegend(data=datasets(), position='bottomright', title='Duration', pal=pal, opacity=1,
                 values=~DURATION)
@@ -208,26 +209,26 @@ server <- function(input, output) {
   # add/take out new studies if option is toggled
   observe({
     if (input$newstudies == TRUE){
-    leafletProxy('StudyMap') %>% 
-      addPolygons(data=large.studies() %>% filter(STUDY_ID > 2000), group='new',
-                  fillOpacity=0.7, fillColor='#cf7941', weight=2, color='#cf7941',
-                  highlightOptions = highlightOptions(fillOpacity=0.9,fillColor='#155f49', color='#155f49',bringToFront = F),
-                  popup = ~paste0("<h5 style='color: #cf7941'>", TITLE,"</h5>", 
-                                  "<strong style='color: #cf7941'>Coming soon in v2.0</strong>",
-                                  '<h6>', CONTACT_1, ifelse(CONTACT_2 != '', ', ', ''), CONTACT_2,' et al. </h6>',
-                                  "<strong>Duration: </strong>",START_YEAR," to ",END_YEAR,"<br/>",
-                                  "<strong>Taxa: </strong>",TAXA, "<br/>",
-                                  "<strong>Biome: </strong>", BIOME_MAP)) %>% 
-      # coming soon new small extent studies
-      addCircleMarkers(data=datasets() %>% filter(STUDY_ID > 2000  & STUDY_ID %in% sing.cell.studies), group='new', ~CENT_LONG, ~CENT_LAT, radius=8,
-                       opacity=1, fillOpacity=1, fillColor='#cf7941aa', weight=2, color='#cf7941',
-                       popup = ~paste0("<h5 style='color: #cf7941'>", TITLE,"</h5>", 
-                                       "<strong style='color: #cf7941'>Coming soon in v2.0</strong>",
-                                       '<h6>', CONTACT_1, ifelse(CONTACT_2 != '', ', ', ''), CONTACT_2,' et al. </h6>',
-                                       "<strong>Duration: </strong>",START_YEAR," to ",END_YEAR,"<br/>",
-                                       "<strong>Taxa: </strong>",TAXA, "<br/>",
-                                       "<strong>Biome: </strong>", BIOME_MAP))
-      }
+      leafletProxy('StudyMap') %>% 
+        addPolygons(data=large.studies() %>% filter(STUDY_ID > 2000), group='new',
+                    fillOpacity=0.7, fillColor='#cf7941', weight=2, color='#cf7941',
+                    highlightOptions = highlightOptions(fillOpacity=0.9,fillColor='#155f49', color='#155f49',bringToFront = F),
+                    popup = ~paste0("<h5 style='color: #cf7941'>", TITLE,"</h5>", 
+                                    "<strong style='color: #cf7941'>Coming soon in v2.0</strong>",
+                                    '<h6>', CONTACT_1, ifelse(CONTACT_2 != '', ', ', ''), CONTACT_2,' et al. </h6>',
+                                    "<strong>Duration: </strong>",START_YEAR," to ",END_YEAR,"<br/>",
+                                    "<strong>Taxa: </strong>",TAXA, "<br/>",
+                                    "<strong>Biome: </strong>", BIOME_MAP)) %>% 
+        # coming soon new small extent studies
+        addCircleMarkers(data=datasets() %>% filter(STUDY_ID > 2000  & STUDY_ID %in% sing.cell.studies), group='new', ~CENT_LONG, ~CENT_LAT, radius=8,
+                         opacity=1, fillOpacity=1, fillColor='#cf7941aa', weight=2, color='#cf7941',
+                         popup = ~paste0("<h5 style='color: #cf7941'>", TITLE,"</h5>", 
+                                         "<strong style='color: #cf7941'>Coming soon in v2.0</strong>",
+                                         '<h6>', CONTACT_1, ifelse(CONTACT_2 != '', ', ', ''), CONTACT_2,' et al. </h6>',
+                                         "<strong>Duration: </strong>",START_YEAR," to ",END_YEAR,"<br/>",
+                                         "<strong>Taxa: </strong>",TAXA, "<br/>",
+                                         "<strong>Biome: </strong>", BIOME_MAP))
+    }
     if (input$newstudies == FALSE) {
       leafletProxy('StudyMap') %>% 
         clearGroup('new')
