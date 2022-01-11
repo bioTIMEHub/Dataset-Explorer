@@ -1,12 +1,9 @@
 # History files
-.Rhistory
-.Rapp.history
-
-# Session Data files
-.RData
+*.Rhistory
+*.Rapp.history
 
 # User-specific files
-.Ruserdata
+*.Ruserdata
 
 # Example code in package build process
 *-Ex.R
@@ -36,10 +33,10 @@ vignettes/*.pdf
 *.knit.md
 
 # R Environment Variables
-.Renviron
+*.Renviron
 
 # R studio project file
-.Rproj
+*.Rproj
 
 # Mac temporary files
 .DS_Store
