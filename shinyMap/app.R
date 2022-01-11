@@ -142,7 +142,7 @@ server <- function(input, output) {
       leaflet(options = leafletOptions(minZoom=1.3, worldCopyJump=F)) %>%
       setView(lng=0, lat=0, zoom=1.25) %>% 
       addProviderTiles(providers$CartoDB.PositronNoLabels) %>%
-      addPolygons(data=large.studies(), 
+      addPolygons(data=large.studies(), # add the large extent studies by hex polygons we generated
                   fillOpacity=0.5, fillColor=~pal(DURATION), weight=1.2, color='#155f4933',
                   highlightOptions = highlightOptions(fillOpacity=0.9,fillColor='#cf7941', bringToFront = F),
                   popup = ~paste0("<h5>", TITLE,"</h5>",
@@ -153,6 +153,7 @@ server <- function(input, output) {
       addCircleMarkers(data=studies(), ~CENT_LONG, ~CENT_LAT, radius=~DURATION/15+6, 
                        opacity=1, fillOpacity=1, fillColor=~pal(DURATION), weight=2, color='#155f49',
                        clusterOptions = markerClusterOptions(clickable=T, riseOnHover=T, freezeAtZoom = 4,
+                                                             # specify custom cluster thresholds with a javascript function
                                                              iconCreateFunction=JS("function (cluster) {    
                                         var childCount = cluster.getChildCount(); 
                                         var c = ' marker-cluster-';  
