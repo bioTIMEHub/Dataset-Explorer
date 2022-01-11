@@ -17,14 +17,14 @@ body {
     }
 
 #mapwrap {
-  width: 100vw;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-  padding: 0;
-  margin:0;
-  display: flex;
+	width: 100vw;
+	height: 100%;
+	position: absolute;
+	top: 0;
+	left: 0;
+	padding: 0;
+	margin:0;
+	display: flex;
   flex-wrap: wrap;
   flex-direction: row;
   justify-content: center;
@@ -33,11 +33,11 @@ body {
 }
 
 #StudyMap {
-  width: 100%;
-  height: 100%!important;
-  visibility: inherit;
-  position: relative;
-  bottom: 0px;
+	width: 100%;
+	height: 100%!important;
+	visibility: inherit;
+	position: relative;
+	bottom: 0px;
 }
     
 #maprow {
@@ -290,22 +290,22 @@ button:hover, .btn:hover, .btn-default:hover, .action-button:hover {
 }
 
 a.button {
-  display: inline-block;
-  padding: 2px 8px;
-  border: 1px solid #253A45;
-  border-radius: 10px;
-  font-family: var(--Font3);
-  font-size: 13px;
-  text-align: center;
-  margin-top: 11px;
-  color: #253A45;
-  text-decoration: none;
+	display: inline-block;
+	padding: 2px 8px;
+	border: 1px solid #253A45;
+	border-radius: 10px;
+	font-family: var(--Font3);
+	font-size: 13px;
+	text-align: center;
+	margin-top: 11px;
+	color: #253A45;
+	text-decoration: none;
 }
 
 a.button:hover {
-  color: #FFF;
-  background-color: #253A45;
-  text-decoration: none;
+	color: #FFF;
+	background-color: #253A45;
+	text-decoration: none;
 }
     
 .leaflet-popup-content h6 {
@@ -346,58 +346,58 @@ a.button:hover {
 }
 
 .marker-cluster div span {
-  line-height: 24px!important;
-  font-family: var(--Font3)!important;
-  font-weight:500!important;
-  color: var(--color-text)!important;
+	line-height: 24px!important;
+	font-family: var(--Font3)!important;
+	font-weight:500!important;
+	color: var(--color-text)!important;
 }
 
 .marker-cluster:hover div span {
-  color: #FFFFFF!important;
+	color: #FFFFFF!important;
 }
 
 .marker-cluster-large, .marker-cluster-medium, .marker-cluster-small, .new-cluster-large, .new-cluster-medium, .new-cluster-small {
-  background-color: transparent!important;
+	background-color: transparent!important;
 }
 
 .marker-cluster-large div {
-  background-color: #FFFFFFAA!important;
-  border: 2px solid var(--color-text)!important;
-  font-family: var(--Font3)!important;
-  font-weight:500!important;
-  font-size: 15px!important;
+	background-color: #FFFFFFAA!important;
+	border: 2px solid var(--color-text)!important;
+	font-family: var(--Font3)!important;
+	font-weight:500!important;
+	font-size: 15px!important;
 }
 
 .marker-cluster-large:hover div {
-  background-color: #cf7941!important;
-  color: #FFFFFF!important;
+	background-color: #cf7941!important;
+	color: #FFFFFF!important;
 }
 
 .marker-cluster-medium div {
-  background-color: #FFFFFFAA!important;
-  border: 2px solid var(--color-text)!important;
-  font-family: var(--Font3)!important;
-  font-weight: 500!important;
-  font-size: 16px!important;
-  transform: scale(0.9)!important;
+	background-color: #FFFFFFAA!important;
+	border: 2px solid var(--color-text)!important;
+	font-family: var(--Font3)!important;
+	font-weight: 500!important;
+	font-size: 16px!important;
+	transform: scale(0.9)!important;
 }
 
 .marker-cluster-medium:hover div {
-  background-color: #cf7941!important;
-  color: #FFFFFF!important;}
+	background-color: #cf7941!important;
+	color: #FFFFFF!important;}
 
 .marker-cluster-small div {
-  background-color: #FFFFFFAA!important;
-  border: 2px solid var(--color-text)!important;
-  font-family: var(--Font3)!important;
-  font-weight: 500!important;
-  font-size: 18px!important;
-  transform: scale(0.8)!important;
+	background-color: #FFFFFFAA!important;
+	border: 2px solid var(--color-text)!important;
+	font-family: var(--Font3)!important;
+	font-weight: 500!important;
+	font-size: 18px!important;
+	transform: scale(0.8)!important;
 }
 
 .marker-cluster-small:hover div {
-  background-color: #cf7941!important;
-  color: #FFFFFF!important;
+	background-color: #cf7941!important;
+	color: #FFFFFF!important;
 }
 
 /* marker clusters for new studies */
@@ -412,14 +412,14 @@ a.button:hover {
   border-color: var(--color-em);
   color: #FFFFFF!important;
 }
-  
-  
+	
+	
 path.leaflet-interactive {
-  opacity: 0.8!important;
+	opacity: 0.8!important;
 }
 
 path.leaflet-interactive:hover {
-  opacity: 1.0!important;
+	opacity: 1.0!important;
 }
 
 .info {

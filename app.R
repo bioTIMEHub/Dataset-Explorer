@@ -1,6 +1,7 @@
 
 # BioTIME App
-# Description: Explores BioTIME datasets by mapping the global coverage of data sets, attributing contributors
+# Description: Explores BioTIME datasets by mapping the global coverage of data sets, attributing contributors,
+# and shows trends from Science 2014 paper.
 # Author: Cher Chow
 
 require(shiny)
