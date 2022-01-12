@@ -81,7 +81,8 @@ ui <- fluidPage(
                              tags$div(class="accordion",
                                       tags$input(id='tog_taxa', type='checkbox', class='accordion-toggle', name='toggle'),
                                       tags$label(`for`='tog_taxa', 'Taxa'),
-                                      tags$section(checkboxGroupInput('Taxa', label=NULL,
+                                      tags$section(actionButton("selectall", label="Select/Deselect all"),
+                                        checkboxGroupInput('Taxa', label=NULL,
                                                                       choiceNames=levels(BT_datasets$TAXA),
                                                                       selected=levels(BT_datasets$TAXA),
                                                                       choiceValues=levels(BT_datasets$TAXA)))),
@@ -121,6 +122,21 @@ server <- function(input, output) {
     reset('control')
   })
   
+  # select/deselect all taxa button
+  
+  observe({
+    if (input$selectall > 0) {
+      if (input$selectall %% 2 == 0){
+        updateCheckboxGroupInput(inputId="Taxa",
+                                 choices = levels(BT_datasets$TAXA),
+                                 selected = levels(BT_datasets$TAXA))
+      } else {
+        updateCheckboxGroupInput(inputId="Taxa",
+                                 choices = levels(BT_datasets$TAXA),
+                                 selected = c())
+      }}
+  })
+  
   
   # Dataset map -------------------------------------------------------------
   
@@ -152,9 +168,9 @@ server <- function(input, output) {
   # draw the map
   output$StudyMap <- renderLeaflet({
     leaflet(options = leafletOptions(minZoom=1.3, worldCopyJump=T)) %>%
-      fitBounds(lng1=-180, lng2=180, lat1=-80, lat2=90) %>% addEasyButton(easyButton(
-        icon="fa-globe", title="Zoom to Level 1",
-        onClick=JS("function(btn, map){ map.setView(new L.LatLng(0, 0), 1); }"))) %>% 
+      setView(lng = 0, lat = 0, zoom = 2) %>% addEasyButton(easyButton(
+        icon="fa-globe", title="Zoom out to global view",
+        onClick=JS("function(btn, map){ map.setView(new L.LatLng(0, 0), 2); }"))) %>% 
       # manual legend
       addControl(position='bottomright', html = "
                  <ul id='legend'>
@@ -177,7 +193,7 @@ server <- function(input, output) {
                                   "<strong>Duration: </strong>",START_YEAR," to ",END_YEAR,"<br/>",
                                   "<strong>Taxa: </strong>",TAXA, "<br/>",
                                   "<strong>Biome: </strong>", BIOME_MAP,"<br/>",
-                                  "<a class='button' target='_parent' href='http://biotime.st-andrews.ac.uk/selectStudy.php?study=", STUDY_ID, "'>Go to study</a>")) %>% 
+                                  "<a class='button' target='_parent' href='http://biotime.st-andrews.ac.uk/selectStudy.php?study=", STUDY_ID, "'>View full database record</a>")) %>% 
       
       # public small extent studies
       addCircleMarkers(data=datasets() %>% filter(STUDY_ID < 2000 & STUDY_ID %in% sing.cell.studies), ~CENT_LONG, ~CENT_LAT, radius=8,
@@ -201,7 +217,7 @@ server <- function(input, output) {
                                        "<strong>Duration: </strong>",START_YEAR," to ",END_YEAR,"<br/>",
                                        "<strong>Taxa: </strong>",TAXA, "<br/>",
                                        "<strong>Biome: </strong>", BIOME_MAP, "<br/>",
-                                       "<a class='button' target='_parent' href='http://biotime.st-andrews.ac.uk/selectStudy.php?study=", STUDY_ID, "'>Go to study</a>")) %>%
+                                       "<a class='button' target='_parent' href='http://biotime.st-andrews.ac.uk/selectStudy.php?study=", STUDY_ID, "'>View full database record</a>")) %>%
       
       addLegend(data=datasets(), position='bottomright', title='Duration', pal=pal, opacity=1,
                 values=~DURATION)
