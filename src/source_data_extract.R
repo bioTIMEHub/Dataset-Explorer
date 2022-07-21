@@ -6,7 +6,7 @@
 # This script must be run from within the server's RStudio to extract data from the SQL database
 
 # Set up BioTIME database connection
-Connection <- dbConnect(RMariaDB::MariaDB(), dbname="biotimedb", username="btteam", password="20Biotime17", host="127.0.0.1")
+Connection <- dbConnect(RMariaDB::MariaDB(), dbname="##redacted##", username="##redacted##", password="##redacted##", host="##redacted##")
 
 
 # Metadata ----------------------------------------------------------------
