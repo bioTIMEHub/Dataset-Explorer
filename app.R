@@ -73,7 +73,8 @@ ui <- fluidPage(
                              tags$div(class="accordion",
                                       tags$input(id='tog_realm', type='checkbox', class='accordion-toggle', name='toggle'),
                                       tags$label(`for`='tog_realm', 'Realm'),
-                                      tags$section(checkboxGroupInput('Realm', label=NULL,
+                                      tags$section(actionButton("selectallR", label="Select/Deselect all", class='selectall'),
+                                                   checkboxGroupInput('Realm', label=NULL,
                                                                       choiceNames=levels(BT_datasets$REALM),
                                                                       selected=levels(BT_datasets$REALM),
                                                                       choiceValues=levels(BT_datasets$REALM)))),
@@ -81,8 +82,8 @@ ui <- fluidPage(
                              tags$div(class="accordion",
                                       tags$input(id='tog_taxa', type='checkbox', class='accordion-toggle', name='toggle'),
                                       tags$label(`for`='tog_taxa', 'Taxa'),
-                                      tags$section(actionButton("selectall", label="Select/Deselect all"),
-                                        checkboxGroupInput('Taxa', label=NULL,
+                                      tags$section(actionButton("selectallT", label="Select/Deselect all", class='selectall'),
+                                                   checkboxGroupInput('Taxa', label=NULL,
                                                                       choiceNames=levels(BT_datasets$TAXA),
                                                                       selected=levels(BT_datasets$TAXA),
                                                                       choiceValues=levels(BT_datasets$TAXA)))),
@@ -90,7 +91,8 @@ ui <- fluidPage(
                              tags$div(class="accordion",
                                       tags$input(id='tog_climate', type='checkbox', class='accordion-toggle', name='toggle'),
                                       tags$label(`for`='tog_climate', 'Climate'),
-                                      tags$section(checkboxGroupInput('Climate', label=NULL,
+                                      tags$section(actionButton("selectallC", label="Select/Deselect all", class='selectall'),
+                                                   checkboxGroupInput('Climate', label=NULL,
                                                                       choiceNames=levels(BT_datasets$CLIMATE),
                                                                       selected=levels(BT_datasets$CLIMATE),
                                                                       choiceValues=levels(BT_datasets$CLIMATE)))),
@@ -122,17 +124,43 @@ server <- function(input, output) {
     reset('control')
   })
   
-  # select/deselect all taxa button
+  # select/deselect all buttons
   
   observe({
-    if (input$selectall > 0) {
-      if (input$selectall %% 2 == 0){
+    if (input$selectallR > 0) {
+      if (input$selectallR %% 2 == 0){
+        updateCheckboxGroupInput(inputId="Realm",
+                                 choices = levels(BT_datasets$REALM),
+                                 selected = levels(BT_datasets$REALM))
+      } else {
+        updateCheckboxGroupInput(inputId="Realm",
+                                 choices = levels(BT_datasets$REALM),
+                                 selected = c())
+      }}
+  })
+  
+  observe({
+    if (input$selectallT > 0) {
+      if (input$selectallT %% 2 == 0){
         updateCheckboxGroupInput(inputId="Taxa",
                                  choices = levels(BT_datasets$TAXA),
                                  selected = levels(BT_datasets$TAXA))
       } else {
         updateCheckboxGroupInput(inputId="Taxa",
                                  choices = levels(BT_datasets$TAXA),
+                                 selected = c())
+      }}
+  })
+  
+  observe({
+    if (input$selectallC > 0) {
+      if (input$selectallC %% 2 == 0){
+        updateCheckboxGroupInput(inputId="Climate",
+                                 choices = levels(BT_datasets$CLIMATE),
+                                 selected = levels(BT_datasets$CLIMATE))
+      } else {
+        updateCheckboxGroupInput(inputId="Climate",
+                                 choices = levels(BT_datasets$CLIMATE),
                                  selected = c())
       }}
   })
@@ -167,8 +195,8 @@ server <- function(input, output) {
   
   # draw the map
   output$StudyMap <- renderLeaflet({
-    leaflet(options = leafletOptions(minZoom=1.3, worldCopyJump=T)) %>%
-      setView(lng = 0, lat = 0, zoom = 2) %>% addEasyButton(easyButton(
+    leaflet(options = leafletOptions(minZoom=2, maxZoom = 6, worldCopyJump=T)) %>%
+      setView(lng = runif(n=1, min = -90, max=90), lat = runif(n=1, min = -60, max=60), zoom = 3) %>% addEasyButton(easyButton(
         icon="fa-globe", title="Zoom out to global view",
         onClick=JS("function(btn, map){ map.setView(new L.LatLng(0, 0), 2); }"))) %>% 
       # manual legend
