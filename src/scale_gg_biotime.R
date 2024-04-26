@@ -7,10 +7,12 @@ require(ggplot2)
 
 ## BioTIME palettes set up
 biotime_palettes <- list(
-  'realms' = c("#155f49","#66c1d1","#d9d956","#cf7941"),
-  'gradient' = c("#00483d","#127c8e","#31b9c2","#86db9c","#c0f176","#ffff67"),
-  'cool' = c("#155f49","#67b6c4"),
-  'warm' = c("#d9d956","#cf7941"))
+  'realms4' = c("#155f49","#66c1d1","#d9d956","#d17538"),
+  'realms6' = c("#155f49","#1ea19a","#61cde0","#EBEB58","#e9ae27","#d17538"),
+  'heat' = c("#155f49","#1ea19a","#61cde0","#f7ffda","#ebeb58","#e9ae27","#d17538"),
+  'gradient' = c("#002120","#00483d","#127c8e","#25b0ba","#72e390","#d6f054"),
+  'cool' = c("#155f49","#1ea19a","#61cde0"),
+  'warm' = c("#d9d956","#e9ae27","#d17538"))
 
 intPalette <- function (colors, ...) {
   ramp <- colorRamp(colors, ...)

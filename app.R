@@ -21,29 +21,22 @@ set.seed(24)
 
 # BioTIME color functions
 source('./src/scale_gg_biotime.R')
-
+proj = "+proj=natearth +lon_0=0 +x_0=0 +y_0=0 +R=6371008.7714 +units=m +no_defs +type=crs"
 # load data
-BT_datasets <- read.csv('./src/app_data.csv', header=T) # table for dataset metadata
-load('./src/hex_studies.RData') # load the hex cell study extents
-load('./src/circle_studies.RData') # load vector listing studies that are too small to plot extents
+dt_points <- read_csv('src/dt_points_4326.csv')
+dt_hex <- read_csv('src/dt_hex.csv') %>% st_as_sf(., wkt = 'wkt', crs = proj)
+meta <- bind_rows(dt_points, dt_hex) %>% st_drop_geometry %>% arrange(STUDY_ID)
 
-# Housekeeping after importing
-BT_datasets$TAXA <- str_to_title(BT_datasets$TAXA) # fix mismatched title case for levels
-BT_datasets$TAXA <- str_replace_all(BT_datasets$TAXA, 'All', 'Multiple') 
-BT_datasets$TAXA <- as.factor(BT_datasets$TAXA)
-BT_datasets$REALM <- as.factor(BT_datasets$REALM)
-BT_datasets$BIOME_MAP <- as.factor(BT_datasets$BIOME_MAP)
-BT_datasets$CLIMATE <- as.factor(BT_datasets$CLIMATE)
-# year inclusive
-BT_datasets$DURATION <- BT_datasets$DURATION + 1
+# leaflet polygons need to be in WGS84 regardless of target proj
+# dt_points <- st_transform(dt_points, 4326)
+# dt_points$LAT <- st_coordinates(dt_points)[,2]
+# dt_points$LON <- st_coordinates(dt_points)[,1]
+# dt_points <- st_drop_geometry(dt_points)
 
-extents <- left_join(extents, BT_datasets, by='STUDY_ID')
-wgs84 <- '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'
-merckm <- '+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +a=6378137 +b=6378137 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs'
+# dt_hex <- st_transform(dt_hex, 4326) %>% st_make_valid
 
-# transform the spatial data to fit the original BioTIME WGS datum
-st_crs(extents) <- merckm # safety net for mismatched GDAL package versions
-extents <- st_transform(extents, wgs84)
+str(dt_points)
+str(dt_hex)
 
 # User Interface (Frontend) ---------------------------------------------------------------
 ui <- fluidPage(
@@ -75,27 +68,28 @@ ui <- fluidPage(
                                       tags$label(`for`='tog_realm', 'Realm'),
                                       tags$section(actionButton("selectallR", label="Select/Deselect all", class='selectall'),
                                                    checkboxGroupInput('Realm', label=NULL,
-                                                                      choiceNames=levels(BT_datasets$REALM),
-                                                                      selected=levels(BT_datasets$REALM),
-                                                                      choiceValues=levels(BT_datasets$REALM)))),
+                                                                      choiceNames=sort(unique(meta$REALM)),
+                                                                      selected=sort(unique(meta$REALM)),
+                                                                      choiceValues=sort(unique(meta$REALM)))
+                                                   )),
                              
                              tags$div(class="accordion",
                                       tags$input(id='tog_taxa', type='checkbox', class='accordion-toggle', name='toggle'),
                                       tags$label(`for`='tog_taxa', 'Taxa'),
                                       tags$section(actionButton("selectallT", label="Select/Deselect all", class='selectall'),
                                                    checkboxGroupInput('Taxa', label=NULL,
-                                                                      choiceNames=levels(BT_datasets$TAXA),
-                                                                      selected=levels(BT_datasets$TAXA),
-                                                                      choiceValues=levels(BT_datasets$TAXA)))),
+                                                                      choiceNames=sort(unique(meta$TAXA)),
+                                                                      selected=sort(unique(meta$TAXA)),
+                                                                      choiceValues=sort(unique(meta$TAXA))))),
                              
                              tags$div(class="accordion",
                                       tags$input(id='tog_climate', type='checkbox', class='accordion-toggle', name='toggle'),
                                       tags$label(`for`='tog_climate', 'Climate'),
                                       tags$section(actionButton("selectallC", label="Select/Deselect all", class='selectall'),
                                                    checkboxGroupInput('Climate', label=NULL,
-                                                                      choiceNames=levels(BT_datasets$CLIMATE),
-                                                                      selected=levels(BT_datasets$CLIMATE),
-                                                                      choiceValues=levels(BT_datasets$CLIMATE)))),
+                                                                      choiceNames=sort(unique(meta$CLIMATE)),
+                                                                      selected=sort(unique(meta$CLIMATE)),
+                                                                      choiceValues=sort(unique(meta$CLIMATE))))),
                              
                              tags$div(class="accordion",
                                       tags$input(id='tog_dur', type='checkbox', class='accordion-toggle', name='toggle'),
@@ -103,7 +97,6 @@ ui <- fluidPage(
                                       tags$section(sliderInput('Duration', label=NULL,
                                                                min=2, max=130, value=c(2, 130),
                                                                round = T, ticks = F, animate = FALSE))),
-                             checkboxInput(inputId = "newstudies", label = 'Show upcoming v2.0 studies', value=TRUE),
                              actionButton('reset', 'Reset'),
                              
                              # manual marker legend
@@ -130,24 +123,26 @@ server <- function(input, output) {
     if (input$selectallR > 0) {
       if (input$selectallR %% 2 == 0){
         updateCheckboxGroupInput(inputId="Realm",
-                                 choices = levels(BT_datasets$REALM),
-                                 selected = levels(BT_datasets$REALM))
-      } else {
+                                 choices = sort(unique(meta$REALM)),
+                                 selected = sort(unique(meta$REALM)))
+        }
+      else {
         updateCheckboxGroupInput(inputId="Realm",
-                                 choices = levels(BT_datasets$REALM),
+                                 choices = sort(unique(meta$REALM)),
                                  selected = c())
-      }}
+      }
+    }
   })
   
   observe({
     if (input$selectallT > 0) {
       if (input$selectallT %% 2 == 0){
         updateCheckboxGroupInput(inputId="Taxa",
-                                 choices = levels(BT_datasets$TAXA),
-                                 selected = levels(BT_datasets$TAXA))
+                                 choices = sort(unique(meta$TAXA)),
+                                 selected = sort(unique(meta$TAXA)))
       } else {
         updateCheckboxGroupInput(inputId="Taxa",
-                                 choices = levels(BT_datasets$TAXA),
+                                 choices = sort(unique(meta$TAXA)),
                                  selected = c())
       }}
   })
@@ -156,11 +151,11 @@ server <- function(input, output) {
     if (input$selectallC > 0) {
       if (input$selectallC %% 2 == 0){
         updateCheckboxGroupInput(inputId="Climate",
-                                 choices = levels(BT_datasets$CLIMATE),
-                                 selected = levels(BT_datasets$CLIMATE))
+                                 choices = sort(unique(meta$CLIMATE)),
+                                 selected = sort(unique(meta$CLIMATE)))
       } else {
         updateCheckboxGroupInput(inputId="Climate",
-                                 choices = levels(BT_datasets$CLIMATE),
+                                 choices = sort(unique(meta$CLIMATE)),
                                  selected = c())
       }}
   })
@@ -169,13 +164,18 @@ server <- function(input, output) {
   # Dataset map -------------------------------------------------------------
   
   # dataframe with information but not split (tallies)
-  datasets <- reactive({
-    BT_datasets %>% filter(DURATION >= input$Duration[1] & DURATION <= input$Duration[2] & REALM %in% input$Realm & TAXA %in% input$Taxa & CLIMATE %in% input$Climate)
+  points <- reactive({
+    dt_points %>% filter(Duration >= input$Duration[1] & Duration <= input$Duration[2] & REALM %in% input$Realm & TAXA %in% input$Taxa & CLIMATE %in% input$Climate)
+  })
+  
+  # metadata
+  metadata <- reactive({
+    meta %>% filter(Duration >= input$Duration[1] & Duration <= input$Duration[2] & REALM %in% input$Realm & TAXA %in% input$Taxa & CLIMATE %in% input$Climate)
   })
   
   # make a working dataframe for large extent (hex cell) studies based on the filter options from the input
-  large.studies <- reactive({
-    extents %>% filter(DURATION >= input$Duration[1] & DURATION <= input$Duration[2] & REALM %in% input$Realm & TAXA %in% input$Taxa & CLIMATE %in% input$Climate)
+  hex <- reactive({
+    dt_hex %>% filter(Duration >= input$Duration[1] & Duration <= input$Duration[2] & REALM %in% input$Realm & TAXA %in% input$Taxa & CLIMATE %in% input$Climate)
   })
   
   # create a palette for the leaflet map to use
@@ -184,18 +184,21 @@ server <- function(input, output) {
                   bins=c(2,10,25,50,100,130))
   
   # generate a reactive dataset summary statistic counter
-  output$studies <- renderText({datasets() %>% filter(STUDY_ID < 600) %>% pull(STUDY_ID) %>% n_distinct()})
-  output$contributors <- renderText({c(datasets() %>% pull(CONTACT_1), datasets() %>% pull(CONTACT_2)) %>% n_distinct()})
-  output$taxa <- renderText({datasets() %>% pull(TAXA) %>% n_distinct()})
-  output$biome <- renderText({datasets() %>% pull(BIOME_MAP) %>% n_distinct()})
-  output$years <- renderText({datasets() %>% pull(DURATION) %>% max()})
+  output$studies <- renderText({metadata() %>% pull(STUDY_ID) %>% n_distinct()})
+  output$contributors <- renderText({c(metadata() %>% pull(CONTACT_1), metadata() %>% pull(CONTACT_2)) %>% n_distinct()})
+  output$taxa <- renderText({metadata() %>% pull(TAXA) %>% n_distinct()})
+  output$biome <- renderText({metadata() %>% pull(BIOME_MAP) %>% n_distinct()})
+  output$years <- renderText({metadata() %>% pull(Duration) %>% max()})
   
   # url for custom BioTIME color basemap tiles
-  BioTIMEtile <- 'https://api.mapbox.com/styles/v1/biotime/ckpz9jzdk2u7117lm6fngw29j/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiYmlvdGltZSIsImEiOiJja3B6OWhzaDkxbnloMndwOXhtYnM3cGtoIn0.MMtE79hfFUUDQxXOQHmqxg'
+  BioTIMEtile <- 'https://api.mapbox.com/styles/v1/biotime/clvgjez32018p01qu7x3w6ki9/wmts?access_token=pk.eyJ1IjoiYmlvdGltZSIsImEiOiJja3B6OWhzaDkxbnloMndwOXhtYnM3cGtoIn0.MMtE79hfFUUDQxXOQHmqxg'
+  natearth <- leafletCRS(crsClass = "L.Proj.CRS", code = "ESRI:53077",
+                    proj4def = proj, scales = 1:10)
+  
   
   # draw the map
   output$StudyMap <- renderLeaflet({
-    leaflet(options = leafletOptions(minZoom=2, maxZoom = 6, worldCopyJump=T)) %>%
+    leaflet(options = leafletOptions(minZoom=2, maxZoom = 6, worldCopyJump=T, crs = natearth)) %>%
       setView(lng = runif(n=1, min = -90, max=90), lat = runif(n=1, min = -60, max=60), zoom = 3) %>% addEasyButton(easyButton(
         icon="fa-globe", title="Zoom out to global view",
         onClick=JS("function(btn, map){ map.setView(new L.LatLng(0, 0), 2); }"))) %>% 
@@ -205,7 +208,6 @@ server <- function(input, output) {
                     <li><div id='legend-study' class='symbol'></div> Study </li>
                     <li><div id='legend-hex' class='symbol'></div> Large-extent study</li>
                     <li><div id='legend-cluster' class='symbol'>3</div> Study cluster</li>
-                    <li><div id='legend-new' class='symbol'></div> <div id='legend-newhex' class='symbol'></div> Upcoming studies</li>
                 </ul>
                  ") %>% 
       
@@ -213,19 +215,18 @@ server <- function(input, output) {
       addTiles(urlTemplate=BioTIMEtile) %>%
       
       # public large extent studies by hex polygons we generated
-      addPolygons(data=large.studies() %>% filter(STUDY_ID < 2000),
-                  fillOpacity=0.5, fillColor=~pal(DURATION), weight=1.4, color='#155f4966',
+      addPolygons(data=hex(),
+                  fillOpacity=0.5, fillColor=~pal(Duration), weight=1.4, color='#155f4966',
                   highlightOptions = highlightOptions(fillOpacity=0.9,fillColor='#cf7941', bringToFront = F),
                   popup = ~paste0("<h5>", TITLE,"</h5>",
                                   '<h6>', CONTACT_1, ifelse(CONTACT_2 != '', ', ', ''), CONTACT_2,' et al. </h6>',
-                                  "<strong>Duration: </strong>",START_YEAR," to ",END_YEAR,"<br/>",
                                   "<strong>Taxa: </strong>",TAXA, "<br/>",
                                   "<strong>Biome: </strong>", BIOME_MAP,"<br/>",
                                   "<a class='button' target='_parent' href='http://biotime.st-andrews.ac.uk/selectStudy.php?study=", STUDY_ID, "'>View full database record</a>")) %>% 
       
       # public small extent studies
-      addCircleMarkers(data=datasets() %>% filter(STUDY_ID < 2000 & STUDY_ID %in% sing.cell.studies), ~CENT_LONG, ~CENT_LAT, radius=8,
-                       opacity=1, fillOpacity=1, fillColor=~pal(DURATION), weight=2, color='#155f49',
+      addCircleMarkers(data=points(), ~LON, ~LAT, radius=8,
+                       opacity=1, fillOpacity=1, fillColor=~pal(Duration), weight=2, color='#155f49',
                        clusterOptions = markerClusterOptions(disableClusteringAtZoom = 4, spiderfyOnMaxZoom = F, # specify custom cluster thresholds with a javascript function
                                                              iconCreateFunction=JS("function (cluster) {
                                                             var childCount = cluster.getChildCount();
@@ -242,42 +243,12 @@ server <- function(input, output) {
                                                           }")),
                        popup = ~paste0("<h5>", TITLE,"</h5>",
                                        '<h6>', CONTACT_1, ifelse(CONTACT_2 != '', ', ', ''), CONTACT_2,' et al. </h6>',
-                                       "<strong>Duration: </strong>",START_YEAR," to ",END_YEAR,"<br/>",
                                        "<strong>Taxa: </strong>",TAXA, "<br/>",
                                        "<strong>Biome: </strong>", BIOME_MAP, "<br/>",
                                        "<a class='button' target='_parent' href='http://biotime.st-andrews.ac.uk/selectStudy.php?study=", STUDY_ID, "'>View full database record</a>")) %>%
       
-      addLegend(data=datasets(), position='bottomright', title='Duration', pal=pal, opacity=1,
-                values=~DURATION)
-  })
-  
-  # add/take out new studies if option is toggled
-  observe({
-    if (input$newstudies == TRUE){
-      leafletProxy('StudyMap') %>% 
-        addPolygons(data=large.studies() %>% filter(STUDY_ID > 2000), group='new',
-                    fillOpacity=0.7, fillColor='#cf7941', weight=2, color='#cf7941',
-                    highlightOptions = highlightOptions(fillOpacity=0.9,fillColor='#155f49', color='#155f49',bringToFront = F),
-                    popup = ~paste0("<h5 style='color: #cf7941'>", TITLE,"</h5>", 
-                                    "<strong style='color: #cf7941'>Coming soon in v2.0</strong>",
-                                    '<h6>', CONTACT_1, ifelse(CONTACT_2 != '', ', ', ''), CONTACT_2,' et al. </h6>',
-                                    "<strong>Duration: </strong>",START_YEAR," to ",END_YEAR,"<br/>",
-                                    "<strong>Taxa: </strong>",TAXA, "<br/>",
-                                    "<strong>Biome: </strong>", BIOME_MAP)) %>% 
-        # coming soon new small extent studies
-        addCircleMarkers(data=datasets() %>% filter(STUDY_ID > 2000  & STUDY_ID %in% sing.cell.studies), group='new', ~CENT_LONG, ~CENT_LAT, radius=8,
-                         opacity=1, fillOpacity=1, fillColor='#cf7941aa', weight=2, color='#cf7941',
-                         popup = ~paste0("<h5 style='color: #cf7941'>", TITLE,"</h5>", 
-                                         "<strong style='color: #cf7941'>Coming soon in v2.0</strong>",
-                                         '<h6>', CONTACT_1, ifelse(CONTACT_2 != '', ', ', ''), CONTACT_2,' et al. </h6>',
-                                         "<strong>Duration: </strong>",START_YEAR," to ",END_YEAR,"<br/>",
-                                         "<strong>Taxa: </strong>",TAXA, "<br/>",
-                                         "<strong>Biome: </strong>", BIOME_MAP))
-    }
-    if (input$newstudies == FALSE) {
-      leafletProxy('StudyMap') %>% 
-        clearGroup('new')
-    }
+      addLegend(data=points(), position='bottomright', title='Duration', pal=pal, opacity=1,
+                values=~Duration)
   })
 } # end server  
 

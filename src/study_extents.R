@@ -5,90 +5,110 @@
 
 require(tidyverse)
 require(sf)
-require(maptools)
-require(utils)
+
 
 set.seed(24)
 setwd('src/') # select the app_data.csv file in the Shiny source folder. sets wd to the src folder
 # intended to be run under Dataset-Explorer R Project file
 
-# import study coordinates
-study_coords <- read.csv('app_coords.csv', header=T, blank.lines.skip=T)
-study_coords[c(117618,121261,169392),1] <- 169 # fix STUDY_ID bug
+# assumes the BioTIME v2 public query with metadata is read in as BT2
+# BT2 <- readRDS('/Users/cherchow/Dropbox/towards BioTIME v2/FINALFILESv2/pubQMeta.rds')
+dt_meta <- BT2 %>% distinct(STUDY_ID, CENT_LAT, CENT_LONG, YEAR, TITLE, BIOME_MAP, CLIMATE, REALM, TAXA) %>% 
+  group_by_at(vars(-YEAR)) %>% summarise(Duration = max(YEAR) - min(YEAR) + 1)
+dt_coords <- BT2 %>% distinct(STUDY_ID, LATITUDE, LONGITUDE)
+dt_contacts <- read_csv('allContactsPlusNew.csv')
+dt_meta <- left_join(dt_meta, dt_contacts[2:4], by = "STUDY_ID")
 
-wgs84 <- '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs' # BioTIME default
-# web mercator in km
-merckm <- '+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +a=6378137 +b=6378137 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs'
+summary(dt_coords)
+summary(dt_meta)
+
+type <- dt_coords %>% group_by(STUDY_ID) %>% 
+  summarise(sites_n = n()) %>% ungroup
+dt_meta <- left_join(dt_meta, type, by="STUDY_ID")
+
+# write_csv(dt_meta, 'dt_meta.csv') # save a copy of the file
+
+# only multilocation studies need to have their coords processed
 
 # create a multipoint sf object with dataset coordinates (from rawdata tables)
-studies_pointsonly <- study_coords %>% dplyr::select(LONGITUDE, LATITUDE) %>% 
-  st_as_sf(., coords=c('LONGITUDE', 'LATITUDE'), crs=wgs84) %>% 
-  st_transform(., crs=merckm)
+dt_coords <- dt_coords %>% filter(STUDY_ID %in% dt_meta$STUDY_ID[dt_meta$sites_n > 1]) %>% 
+  st_as_sf(., coords=c('LONGITUDE', 'LATITUDE'), crs = 4326) # convert lat lon columns to point geometry
 
-# calculate a convex hull that covers all studies
-hulls <- st_convex_hull(st_union(studies_pointsonly))
+# write_csv(dt_coords, 'dt_shiny2_coords.csv')
 
-# Plot to check
+# plot to check
+library(rnaturalearth)
+proj = '+proj=eqearth +lon_0=0 +x_0=0 +y_0=0 +R=6371008.7714 +units=m +no_defs +type=crs'
+world <- ne_countries(scale = 'medium', returnclass = 'sf') %>% st_make_valid()
 ggplot() +
-  geom_polygon(data=map_data('world'), aes(x=long, y=lat, group=group), color='black', fill='transparent') +
-  geom_sf(data=hulls, fill='lightblue', color='blue', alpha=0.2) +
-  geom_sf(data=studies_pointsonly, color='blue', shape=21, size=0.2) +
-  coord_sf(crs=merckm) +
+  geom_sf(data = world, aes(group = admin), color='grey40', fill='grey95') +
+  geom_sf(data=dt_coords, color='blue', shape = 21, size = 2) +
+  guides(fill = 'none') + 
+  coord_sf(crs = proj) +
   theme_minimal()
 
 # make a hexagon grid to overlay the area that covers all our studies
-# remember units are in km! 
-hex_grid <- st_make_grid(hulls, cellsize=300000, square=F, what='polygons')
+# redefine projection for the target 
+proj = "+proj=natearth +lon_0=0 +x_0=0 +y_0=0 +R=6371008.7714 +units=m +no_defs +type=crs"
+
+hex_grid <- st_combine(dt_coords) %>% st_transform(., crs = proj) %>% 
+  st_make_grid(., cellsize = 193600, square=F, what='polygons')
 
 ggplot() +
-  geom_polygon(data=map_data('world'), aes(x=long, y=lat, group=group), color='grey', fill='transparent') +
-  geom_sf(data=studies_pointsonly, color='blue', alpha=0.5) +
-  coord_sf(crs=merckm) +
-  geom_sf(data=hex_grid, color="orange", fill='transparent')
-
+  geom_sf(data = world, aes(group = admin), color='grey40', fill='grey95') +
+  geom_sf(data=hex_grid, color="coral", fill='transparent') +
+  guides(fill = 'none') + 
+  coord_sf(crs = proj) +
+  theme_minimal()
+  
 # generate a vector that tells me which hexagon grid corresponds with each study coordinate point
-study_hex <- st_intersects(studies_pointsonly, hex_grid)
+# operate in the target projection
+dt_coords <- st_transform(dt_coords, proj)
+sum(st_is_valid(dt_coords) + 0) == nrow(dt_coords)
+sum(st_is_valid(hex_grid) + 0)
+study_hex <- st_intersects(dt_coords, hex_grid)
 
-# add that to the study coordinates data frame to ref back to STUDY_ID
+# each item in this list is a coordinate and the value = hex index it intersects with
 study_hex <- rapply(study_hex, function(x) x[1], how = "unlist") # just select the first hex cell if a point intersects with multiple
-study_coords$hexcell <- study_hex # add information from overlap analysis to dataframe
+dt_coords$hexcell <- study_hex # add information from overlap analysis to dataframe
 # hexcell corresponds to the cell number that contains that coordinate point
 
-study_coords <- study_coords %>% distinct(STUDY_ID, hexcell) # keep only distinct hexagon cell records
+dt_coords <- dt_coords %>% distinct(STUDY_ID, hexcell) # keep only distinct hexagon cell records
 # each row = 1 hex cell per study
 
 # check if there are any NAs
-study_coords %>% filter(is.na(hexcell)|hexcell == ''|hexcell == 0)
+dt_coords %>% filter(is.na(hexcell)|hexcell == ''|hexcell == 0)
 
-nHex <- study_coords %>% group_by(STUDY_ID) %>% count() %>% arrange(n, STUDY_ID) 
+nHex <- dt_coords %>% group_by(STUDY_ID) %>% count() %>% arrange(n, STUDY_ID)
 # create a dataframe where n = number of hex cells per study
 # vector that helps index multiple cell studies from single cell studies
-mult.cell.studies <- nHex %>% filter(n > 1) %>% pull(STUDY_ID)
-sing.cell.studies <- nHex %>% filter(n == 1) %>% pull(STUDY_ID)
-length(mult.cell.studies) + length(sing.cell.studies) == n_distinct(study_coords$STUDY_ID) # does this separation add up?
-# no studies left behind!
-
-# to WGS84 for dateline fix, back to web mercator
-hex_grid_sf <- hex_grid %>% st_transform(., wgs84) %>%
-  st_wrap_dateline(., options='WRAPDATELINE=YES') %>%
-  st_transform(., crs=merckm) # in case something goes haywire at dateline
+dt_meta$hex <- 0
+dt_meta$hex[dt_meta$STUDY_ID %in% nHex$STUDY_ID[nHex$n > 1]] <- 1
 
 # make an empty dataframe to populate
-extents <- data.frame(STUDY_ID=mult.cell.studies, geometry=rep('', length(mult.cell.studies)))
+extents <- data.frame(STUDY_ID = dt_meta$STUDY_ID[dt_meta$hex == 1], geometry = '')
 
 # for each study, create a joined polygon of all the hexcells it covers
-for (i in 1:length(mult.cell.studies)) {
-  extents$geometry[i] <- hex_grid_sf[c(study_coords$hexcell[which(study_coords$STUDY_ID == mult.cell.studies[i])])] %>% 
-    st_union(., by_feature=F)
+for (i in 1:nrow(extents)) {
+  extents$geometry[i] <- hex_grid[c(dt_coords$hexcell[which(dt_coords$STUDY_ID == extents$STUDY_ID[i])])] %>% st_combine
 }
 
 extents <- st_as_sf(extents)
-st_crs(extents) <- merckm # make sure sf knows the CRS for the polygons
+st_crs(extents) <- proj # make sure sf knows the CRS for the polygons
 
 ggplot() +
-  geom_polygon(data=map_data('world'), aes(x=long, y=lat, group=group), fill='white', color='black') +
-  geom_sf(data=extents %>% st_transform(., wgs84), aes(fill=STUDY_ID), alpha=0.5) +
-  coord_sf(crs=wgs84)
+  geom_sf(data = world, aes(group = admin), color='grey40', fill='grey95') +
+  geom_sf(data=extents, aes(fill=STUDY_ID), alpha=0.5) +
+  coord_sf(crs=proj)
 
-save(extents, file='hex_studies.RData')
-save(sing.cell.studies, file='circle_studies.RData')
+# one sf tibble for studies that have hex geometry
+extents <- left_join(extents, dt_meta, by="STUDY_ID") %>% select(!c(hex, sites_n))
+# another for single point studies
+dt_points <- dt_meta %>% ungroup %>% filter(hex == 0) %>% st_as_sf(coords = c('CENT_LONG', 'CENT_LAT'), crs = 4326) %>% 
+  select(!c(hex, sites_n)) %>% st_transform(., proj)
+
+dt_points$wkt <- st_as_text(dt_points$geometry)
+st_drop_geometry(dt_points) %>% write_csv(., 'dt_points.csv')
+
+extents %>% mutate(wkt = st_as_text(geometry)) %>% select(!c(geometry, starts_with('CENT'))) %>% 
+  write_csv(., 'dt_hex.csv')
