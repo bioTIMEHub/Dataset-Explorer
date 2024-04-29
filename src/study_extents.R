@@ -11,6 +11,9 @@ set.seed(24)
 setwd('src/') # select the app_data.csv file in the Shiny source folder. sets wd to the src folder
 # intended to be run under Dataset-Explorer R Project file
 
+# define the target projection for visualisation in Shiny
+proj <- 3857
+
 # assumes the BioTIME v2 public query with metadata is read in as BT2
 # BT2 <- readRDS('/Users/cherchow/Dropbox/towards BioTIME v2/FINALFILESv2/pubQMeta.rds')
 dt_meta <- BT2 %>% distinct(STUDY_ID, CENT_LAT, CENT_LONG, YEAR, TITLE, BIOME_MAP, CLIMATE, REALM, TAXA) %>% 
@@ -29,17 +32,17 @@ dt_meta <- left_join(dt_meta, type, by="STUDY_ID")
 # write_csv(dt_meta, 'dt_meta.csv') # save a copy of the file
 
 # only multilocation studies need to have their coords processed
-
 # create a multipoint sf object with dataset coordinates (from rawdata tables)
 dt_coords <- dt_coords %>% filter(STUDY_ID %in% dt_meta$STUDY_ID[dt_meta$sites_n > 1]) %>% 
-  st_as_sf(., coords=c('LONGITUDE', 'LATITUDE'), crs = 4326) # convert lat lon columns to point geometry
+  st_as_sf(., coords=c('LONGITUDE', 'LATITUDE'), crs = 4326) # convert lat lon columns to sf geometry
+# dt coords is our base for the large extent studies. need to conver to target projection
+dt_coords <- st_transform(dt_coords, crs = proj)
 
 # write_csv(dt_coords, 'dt_shiny2_coords.csv')
 
 # plot to check
 library(rnaturalearth)
-proj = '+proj=eqearth +lon_0=0 +x_0=0 +y_0=0 +R=6371008.7714 +units=m +no_defs +type=crs'
-world <- ne_countries(scale = 'medium', returnclass = 'sf') %>% st_make_valid()
+world <- ne_countries(scale = 'medium', returnclass = 'sf') %>% st_make_valid() %>% st_wrap_dateline()
 ggplot() +
   geom_sf(data = world, aes(group = admin), color='grey40', fill='grey95') +
   geom_sf(data=dt_coords, color='blue', shape = 21, size = 2) +
@@ -48,24 +51,24 @@ ggplot() +
   theme_minimal()
 
 # make a hexagon grid to overlay the area that covers all our studies
-# redefine projection for the target 
-proj = "+proj=natearth +lon_0=0 +x_0=0 +y_0=0 +R=6371008.7714 +units=m +no_defs +type=crs"
-
-hex_grid <- st_combine(dt_coords) %>% st_transform(., crs = proj) %>% 
-  st_make_grid(., cellsize = 193600, square=F, what='polygons')
+# MAKE SURE CELLSIZE MATCHES PROJ UNITS
+hex_grid <- st_convex_hull(dt_coords) %>% 
+  st_make_grid(., cellsize = 167000, square=F, what='polygons')
 
 ggplot() +
   geom_sf(data = world, aes(group = admin), color='grey40', fill='grey95') +
   geom_sf(data=hex_grid, color="coral", fill='transparent') +
   guides(fill = 'none') + 
-  coord_sf(crs = proj) +
+  coord_sf(crs = proj, ylim = c(-30240971, 30240971)) +
   theme_minimal()
   
-# generate a vector that tells me which hexagon grid corresponds with each study coordinate point
-# operate in the target projection
-dt_coords <- st_transform(dt_coords, proj)
+# sf_use_s2(FALSE) # useful if grid returns errors in some projections and can't be made valid
+# check validity
 sum(st_is_valid(dt_coords) + 0) == nrow(dt_coords)
 sum(st_is_valid(hex_grid) + 0)
+
+# generate a vector that tells me which hexagon grid corresponds with each study coordinate point
+# operate in the target projection
 study_hex <- st_intersects(dt_coords, hex_grid)
 
 # each item in this list is a coordinate and the value = hex index it intersects with
@@ -99,16 +102,16 @@ st_crs(extents) <- proj # make sure sf knows the CRS for the polygons
 ggplot() +
   geom_sf(data = world, aes(group = admin), color='grey40', fill='grey95') +
   geom_sf(data=extents, aes(fill=STUDY_ID), alpha=0.5) +
-  coord_sf(crs=proj)
+  coord_sf(crs=proj, ylim = c(-19971868, 19971868))
 
 # one sf tibble for studies that have hex geometry
 extents <- left_join(extents, dt_meta, by="STUDY_ID") %>% select(!c(hex, sites_n))
+extents %>% mutate(wkt = st_as_text(geometry)) %>% select(!c(geometry, starts_with('CENT'))) %>% 
+  write_csv(., 'dt_hex_3857.csv')
+
 # another for single point studies
 dt_points <- dt_meta %>% ungroup %>% filter(hex == 0) %>% st_as_sf(coords = c('CENT_LONG', 'CENT_LAT'), crs = 4326) %>% 
   select(!c(hex, sites_n)) %>% st_transform(., proj)
 
 dt_points$wkt <- st_as_text(dt_points$geometry)
 st_drop_geometry(dt_points) %>% write_csv(., 'dt_points.csv')
-
-extents %>% mutate(wkt = st_as_text(geometry)) %>% select(!c(geometry, starts_with('CENT'))) %>% 
-  write_csv(., 'dt_hex.csv')

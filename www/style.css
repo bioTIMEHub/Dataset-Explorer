@@ -1,17 +1,18 @@
-@import url('https://fonts.googleapis.com/css2?family=Fira+Code&family=Libre+Franklin:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Red+Hat+Text:ital,wght@0,400;0,500;1,400;1,500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code&family=Libre+Franklin:ital,wght@0,600;0,700&family=Red+Hat+Text:ital,wght@0,400;0,500;1,400;1,500&family=PT+Sans:ital,wght@0,400&display=swap');
 
 /* DEFINE VARIABLES */
 :root {
   --Font1: 'Libre Franklin', sans-serif;
   --Font2: 'Red Hat Text', sans-serif;
   --Font3: 'Fira Code', monospace;
+  --Font4: 'PT Sans', sans-serif;
   --color-text: #1f3340;
   --color-em: #155f49;
   --color-accent: #cf7941;
 }
 
 body {
-      font-family: var(--Font1);
+      font-family: var(--Font4);
       color: var(--color-text);
       overflow-y: hidden;
     }
@@ -133,14 +134,14 @@ body {
 }
 
 h2 {
-  font-family: var(--Font3);
-  font-size: 21px;
+  font-family: var(--Font2);
+  font-size: 24px;
 }
 
 .accordion{
   transform: translateZ(0);
   border: 1.5px solid var(--color-text);
-  font-size: 13px;
+  font-size: 16px;
   margin: 10px 0;
   border-radius: 10px;
   background-color: #FFFFFFEE;
@@ -168,11 +169,11 @@ h2 {
   position: relative;
   display: block;
   line-height: 100%;
-  font-size: 15px;
-  font-weight: 500;
-  font-family: var(--Font2);
+  font-size: 17px;
+  font-weight: 600;
+  font-family: var(--Font1);
   cursor: pointer;
-  color: var(--color-em);
+  color: var(--color-text);
   margin: 2px 0;
 }
 
@@ -181,8 +182,8 @@ h2 {
   position: absolute;
   top: 0;
   right: 0;
-  line-height: 14px;
-  font-size: 28px;
+  line-height: 15px;
+  font-size: 30px;
   margin: -2px 0;
   color: var(--color-text);
   font-weight: normal;
@@ -244,37 +245,37 @@ h2 {
 
 .btn, .btn-default, .action-button {
   background-color: #transparent;
-  border: 1.5px solid var(--color-text);
+  border: 1px solid var(--color-text);
   padding: 7px 10px;
   line-height: 90%;
   border-radius: 10px;
   color: var(--color-text);
   font-family: var(--Font3);
-  transition: margin ease-in-out 0.2s;
   font-size: 14px;
 }
 
 button:hover, .btn:hover, .btn-default:hover, .action-button:hover, #selectall:hover {
   border-color: var(--color-text);
-  color: var(--color-text);
-  background-color: #FFFFFF;
-  margin-top: 2px;
+  color: #FFF;
+  background-color: var(--color-text);
+  padding: 7px 10px;
 }
 
 button#selectall.btn {
   padding: 5px 7px;
   font-size: 12px;
-  margin-top: 8px;
+  margin-top: 12px;
 }
     
 /* Sliding input bar */
 .irs-bar, .irs-to, .irs-from {
-      background-color: var(--color-accent)!important; border: none!important;
-    }
+      background-color: var(--color-text)!important; border: none!important;
+}
+    
     
 /* Leaflet map styling */
 .leaflet .legend {
-    font-family: var(--Font1);
+    font-family: var(--Font4);
     font-size: 11px;
   }
   
@@ -284,15 +285,15 @@ button#selectall.btn {
     outline: 0;
 }
   
-.leaflet-popup-content {font-family: var(--Font1); z-index: 99!important; font-size: 14px;}
+.leaflet-popup-content {font-family: var(--Font4); z-index: 99!important; font-size: 15px;}
     
 .leaflet-popup-wrapper {border: none; z-index: 900!important;}
     
 .leaflet-popup-content h5 a, .leaflet-popup-content h5 {
-    font-weight: 500;
-    font-family: var(--Font2);
-    font-size: 18px;
-    color: var(--color-em);
+    font-weight: bold;
+    font-family: var(--Font1);
+    font-size: 20px;
+    color: var(--color-text);
     line-height: 120%;
     margin: 0 0 6px 0;
 }
@@ -303,7 +304,7 @@ a.button {
   border: 1px solid #253A45;
   border-radius: 10px;
   font-family: var(--Font3);
-  font-size: 13px;
+  font-size: 14px;
   text-align: center;
   margin-top: 11px;
   color: #253A45;
@@ -317,9 +318,9 @@ a.button:hover {
 }
     
 .leaflet-popup-content h6 {
-      font-weight: 600;
-      font-family: var(--Font1);
-      font-size: 16px;
+      font-weight: 500;
+      font-family: var(--Font2);
+      font-size: 17px;
       line-height: 120%;
       margin: 6px 0 10px 0;
       
@@ -328,7 +329,7 @@ a.button:hover {
 .leaflet-container a.leaflet-popup-close-button {
   padding: 0;
   margin: 7px 7px 0 0;
-  font-size: 22px;
+  font-size: 24px;
   font-family: monospace;
   font-weight: normal;
   color: var(--color-text);
@@ -354,9 +355,9 @@ a.button:hover {
 }
 
 .marker-cluster div span {
-  line-height: 24px!important;
+  line-height: 25px!important;
   font-family: var(--Font3)!important;
-  font-weight:500!important;
+  font-weight: 500!important;
   color: var(--color-text)!important;
 }
 
@@ -369,21 +370,21 @@ a.button:hover {
 }
 
 .marker-cluster-large div {
-  background-color: #FFFFFFAA!important;
-  border: 2px solid var(--color-text)!important;
+  background-color: #FFFFFF!important;
+  border: 1.5px solid var(--color-text)!important;
   font-family: var(--Font3)!important;
   font-weight:500!important;
   font-size: 15px!important;
 }
 
 .marker-cluster-large:hover div {
-  background-color: #cf7941!important;
+  background-color: var(--color-text)!important;
   color: #FFFFFF!important;
 }
 
 .marker-cluster-medium div {
-  background-color: #FFFFFFAA!important;
-  border: 2px solid var(--color-text)!important;
+  background-color: #FFFFFF!important;
+  border: 1.5px solid var(--color-text)!important;
   font-family: var(--Font3)!important;
   font-weight: 500!important;
   font-size: 16px!important;
@@ -391,12 +392,12 @@ a.button:hover {
 }
 
 .marker-cluster-medium:hover div {
-  background-color: #cf7941!important;
+  background-color: var(--color-text)!important;
   color: #FFFFFF!important;}
 
 .marker-cluster-small div {
-  background-color: #FFFFFFAA!important;
-  border: 2px solid var(--color-text)!important;
+  background-color: #FFFFFF!important;
+  border: 1.5px solid var(--color-text)!important;
   font-family: var(--Font3)!important;
   font-weight: 500!important;
   font-size: 18px!important;
@@ -404,23 +405,9 @@ a.button:hover {
 }
 
 .marker-cluster-small:hover div {
-  background-color: #cf7941!important;
+  background-color: var(--color-text)!important;
   color: #FFFFFF!important;
 }
-
-/* marker clusters for new studies */
-
-.new {
-  border: 2px solid var(--color-accent)!important;
-  color: var(--color-accent)!important;
-}
-
-.new:hover {
-  background-color: var(--color-em);
-  border-color: var(--color-em);
-  color: #FFFFFF!important;
-}
-  
   
 path.leaflet-interactive {
   opacity: 0.8!important;
@@ -485,10 +472,10 @@ div#legend-cluster {
   line-height: 16px;
   text-align: center;
   border-radius: 50%;
-  border: 1.5px solid var(--color-text);
+  border: 1px solid var(--color-text);
   background-color: #FFF;
   font-family: var(--Font3);
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 500;
 }
 
@@ -529,43 +516,5 @@ div#legend-cluster {
   bottom: -5.3033px;
   border-bottom: solid 1.4142px #155f4966;
   border-left: solid 1.4142px #155f4966;
-}
-
-/* new hex */
-#legend-newhex {
-  position: relative;
-  width: 15px; 
-  display: inline-block;
-  height: 8.66px;
-  background-color: #cf7941;
-  margin: 3px 5px 3px -3px;
-  border-left: solid 1px #cf7941;
-  border-right: solid 1px #cf7941;
-}
-
-#legend-newhex:before,
-#legend-newhex:after {
-  content: "";
-  position: absolute;
-  z-index: 1;
-  width: 10.61px;
-  height: 10.61px;
-  -webkit-transform: scaleY(0.5774) rotate(-45deg);
-  -ms-transform: scaleY(0.5774) rotate(-45deg);
-  transform: scaleY(0.5774) rotate(-45deg);
-  background-color: inherit;
-  left: 1.1967px;
-}
-
-#legend-newhex:before {
-  top: -5.3033px;
-  border-top: solid 1.4142px #cf7941;
-  border-right: solid 1.4142px #cf7941;
-}
-
-#legend-newhex:after {
-  bottom: -5.3033px;
-  border-bottom: solid 1.4142px #cf7941;
-  border-left: solid 1.4142px #cf7941;
 }
 
